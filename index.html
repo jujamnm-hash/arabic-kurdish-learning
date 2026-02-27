@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>فێربوونی زمانی عەرەبی | بە کوردی سۆرانی</title>
+
+  <!-- Bootstrap 5 RTL -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+  />
+  <!-- Google Fonts: Arabic + Kurdish support -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles/main.css" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+      <span class="brand-icon">🌙</span>
+      <span class="brand-text">فێربوونی عەرەبی</span>
+    </a>
+    <button
+      class="navbar-toggler border-0"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navMenu"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+        <li class="nav-item">
+          <a class="nav-link nav-pill active" href="#" data-section="home" onclick="App.navigate('home');return false">
+            <i class="bi bi-house-door-fill me-1"></i>ماڵەوە
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="#" data-section="letters" onclick="App.navigate('letters');return false">
+            <i class="bi bi-alphabet-uppercase me-1"></i>پیتەکان
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="#" data-section="vocab" onclick="App.navigate('vocab');return false">
+            <i class="bi bi-journal-text me-1"></i>وشەکان
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="#" data-section="stories" onclick="App.navigate('stories');return false">
+            <i class="bi bi-book-half me-1"></i>چیرۆکەکان
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="#" data-section="quiz" onclick="App.navigate('quiz');return false">
+            <i class="bi bi-patch-question-fill me-1"></i>تاقیکردنەوە
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="#" data-section="progress" onclick="App.navigate('progress');return false">
+            <i class="bi bi-bar-chart-fill me-1"></i>پێشکەوتن
+          </a>
+        </li>
+      </ul>
+      <!-- Progress Badge -->
+      <div class="d-flex align-items-center gap-2">
+        <button class="shortcuts-help-btn" data-bs-toggle="modal" data-bs-target="#shortcutsModal" title="کلیلی میانبر (?)">
+          <i class="bi bi-keyboard"></i>
+        </button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="App.toggleTheme()" title="گۆڕینی ڕووکار">
+          <i class="bi bi-sun-fill"></i>
+        </button>
+        <span class="rank-badge" id="rankBadge" title="گەیشت">🌱 نوێخواز</span>
+        <span class="badge-xp" id="navXP">
+          <i class="bi bi-star-fill"></i>
+          <span id="xpCount">0</span> XP
+        </span>
+        <div class="streak-badge" id="streakBadge" title="ڕیزی ڕۆژانە">
+          🔥 <span id="streakCount">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main id="appMain" class="main-wrapper">
+
+  <!-- ══════════ HOME SECTION ══════════ -->
+  <section id="section-home" class="section active">
+    <!-- Hero -->
+    <div class="hero-section">
+      <div class="hero-bg-pattern"></div>
+      <div class="container position-relative">
+        <div class="row align-items-center min-vh-screen py-5">
+          <div class="col-lg-7">
+            <div class="hero-badge mb-3">✨ سیستەمی فێربوونی پیشەیانە</div>
+            <h1 class="hero-title">
+              فێربە زمانی<br />
+              <span class="gradient-text">عەرەبی</span><br />
+              بە کوردی سۆرانی
+            </h1>
+            <p class="hero-subtitle">
+              ئامانجی ئەم سیستەمە ئەوەیە کە تۆ بتوانی زمانی عەرەبی بفێربیت بە شێوەیەکی
+              شادمانە و کارایی زۆر — لەگەڵ چیرۆک، وشە، پیت، و تاقیکردنەوە.
+            </p>
+            <div class="d-flex flex-wrap gap-3 mt-4">
+              <button class="btn btn-hero-primary" onclick="App.navigate('letters')">
+                <i class="bi bi-play-circle-fill me-2"></i>
+                دەست پێبکە ئێستا
+              </button>
+              <button class="btn btn-hero-secondary" onclick="App.navigate('stories')">
+                <i class="bi bi-book-half me-2"></i>
+                بخوێنەوە چیرۆک
+              </button>
+            </div>
+            <!-- Stats row -->
+            <div class="hero-stats mt-5">
+              <div class="stat-item">
+                <span class="stat-num">٢٨</span>
+                <span class="stat-label">پیتی عەرەبی</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-num">١٠٠+</span>
+                <span class="stat-label">وشەی بنەڕەتی</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-num">٨</span>
+                <span class="stat-label">چیرۆکی کوردی</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-num">٥٠+</span>
+                <span class="stat-label">پرسیاری تاقیکردنەوە</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5 d-none d-lg-flex justify-content-center">
+            <div class="hero-arabic-display">
+              <div class="floating-letter" style="--delay:0s">ب</div>
+              <div class="floating-letter" style="--delay:0.3s">س</div>
+              <div class="floating-letter" style="--delay:0.6s">م</div>
+              <div class="floating-letter big-center">بِسْمِ اللَّهِ</div>
+              <div class="floating-letter" style="--delay:0.9s">ع</div>
+              <div class="floating-letter" style="--delay:1.2s">ر</div>
+              <div class="floating-letter" style="--delay:1.5s">ب</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="container py-5">
+      <div class="section-header text-center mb-5">
+        <h2 class="section-title">چی فێر دەبیت؟</h2>
+        <p class="section-sub">سیستەمی فێربوونی تەواو لەگەڵ هەموو ئەوەی پێویستە</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card" onclick="App.navigate('letters')">
+            <div class="feature-icon" style="--c:#6366f1">ﺃ</div>
+            <h5 class="feature-title">پیتەکانی عەرەبی</h5>
+            <p class="feature-desc">هەموو ٢٨ پیتی عەرەبی لەگەڵ دەنگ، شێوەکان، و نووسین</p>
+            <span class="feature-tag">بنچینەیی</span>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card" onclick="App.navigate('vocab')">
+            <div class="feature-icon" style="--c:#f59e0b">📖</div>
+            <h5 class="feature-title">وشەکان</h5>
+            <p class="feature-desc">وشەی ڕۆژانە، ژمارە، رەنگ، ماڵ، خوێندن و زۆری تر</p>
+            <span class="feature-tag">مامناوەند</span>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card" onclick="App.navigate('stories')">
+            <div class="feature-icon" style="--c:#10b981">📚</div>
+            <h5 class="feature-title">چیرۆکەکان</h5>
+            <p class="feature-desc">چیرۆکی کوردی بە عەرەبی لەگەڵ وەرگێڕانی تام بە تام</p>
+            <span class="feature-tag">پێشکەوتوو</span>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card" onclick="App.navigate('quiz')">
+            <div class="feature-icon" style="--c:#ef4444">🎯</div>
+            <h5 class="feature-title">تاقیکردنەوە</h5>
+            <p class="feature-desc">تاقیکردنەوەی کوێستان بۆ پشتڕاستکردنی زانستت</p>
+            <span class="feature-tag">ئینتراکتیف</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Start Letters Preview -->
+    <div class="container pb-4">
+      <div class="quick-preview-card">
+        <h3 class="text-center mb-4">
+          <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+          دەستپێکی خێرا — پیتە یەکەمەکان
+        </h3>
+        <div class="d-flex flex-wrap justify-content-center gap-3" id="quickLetters"></div>
+        <div class="text-center mt-4">
+          <button class="btn btn-outline-primary btn-lg" onclick="App.navigate('letters')">
+            بینینی هەموو پیتەکان
+            <i class="bi bi-arrow-left ms-2"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Word of Day + Daily Goals -->
+    <div class="container pb-5">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="wod-card">
+            <div class="wod-header">
+              <i class="bi bi-calendar-star-fill me-2"></i>وشەی ئەمرۆ
+            </div>
+            <div id="wordOfDay" class="wod-body"></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="goals-card">
+            <div class="goals-header">
+              <i class="bi bi-bullseye me-2"></i>ئامانجەکانی ئەمرۆ
+            </div>
+            <div id="dailyGoals" class="goals-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ LETTERS SECTION ══════════ -->
+  <section id="section-letters" class="section">
+    <div class="container py-5">
+      <!-- Header -->
+      <div class="page-header">
+        <button class="btn btn-back" onclick="App.navigate('home')">
+          <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+        </button>
+        <div>
+          <h2 class="page-title">پیتەکانی عەرەبی</h2>
+          <p class="page-sub">٢٨ پیتی زمانی عەرەبی لەگەڵ شێوە و دەنگ</p>
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs mb-3 d-flex flex-wrap align-items-center gap-2" id="letterFilterTabs">
+        <button class="filter-btn active" data-filter="all" onclick="LetterModule.filter('all',this)">هەموو</button>
+        <button class="filter-btn" data-filter="shamsieh" onclick="LetterModule.filter('shamsieh',this)">شەمسیە</button>
+        <button class="filter-btn" data-filter="qamariyeh" onclick="LetterModule.filter('qamariyeh',this)">قەمەریە</button>
+        <button class="filter-btn" data-filter="long-vowels" onclick="LetterModule.filter('long-vowels',this)">دەنگبەزیکی درێز</button>
+        <button class="letter-quiz-launch-btn" onclick="LetterQuizModule.start()">
+          <i class="bi bi-lightning-fill me-1"></i>تاقیکردنەوەی پیتەکان
+        </button>
+      </div>
+
+      <!-- Letter Search -->
+      <div class="search-bar mb-4">
+        <i class="bi bi-search"></i>
+        <input type="text" id="letterSearch" placeholder="بگەڕێ بە ناوی پیتەکە یا کوردی..." oninput="LetterModule.search(this.value)" />
+      </div>
+
+      <!-- Letters Grid -->
+      <div class="row g-3" id="lettersGrid"></div>
+
+      <!-- Letter Detail Modal -->
+      <div class="modal fade" id="letterModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-arabic">
+          <div class="modal-content">
+            <div class="modal-header border-0">
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="letterModalBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ VOCABULARY SECTION ══════════ -->
+  <section id="section-vocab" class="section">
+    <div class="container py-5">
+      <div class="page-header">
+        <button class="btn btn-back" onclick="App.navigate('home')">
+          <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+        </button>
+        <div>
+          <h2 class="page-title">وشەکانی عەرەبی</h2>
+          <p class="page-sub">وشەکانی بنچینەیی و ڕۆژانە بە کوردی</p>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="vocab-categories mb-4" id="vocabCategoryTabs"></div>
+
+      <!-- Search -->
+      <div class="search-bar mb-4">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          id="vocabSearch"
+          placeholder="بگەڕێ بە عەرەبی یان کوردی..."
+          oninput="VocabModule.search(this.value)"
+        />
+      </div>
+
+      <!-- Flashcard + Export Buttons -->
+      <div class="d-flex justify-content-end gap-2 mb-3 flex-wrap">
+        <button class="btn btn-outline-success btn-sm px-3" onclick="VocabModule.exportLearned()" style="border-radius:12px;font-size:.82rem">
+          <i class="bi bi-download me-1"></i>هاوردەکردنی وشەکان
+        </button>
+        <button class="flashcard-launch-btn" onclick="FlashcardModule.open()">
+          <i class="bi bi-stack me-2"></i>دۆخی فلاشکارد
+        </button>
+      </div>
+
+      <!-- Cards Grid -->
+      <div class="row g-3" id="vocabGrid"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ STORIES SECTION ══════════ -->
+  <section id="section-stories" class="section">
+    <div class="container py-5">
+      <div class="page-header">
+        <button class="btn btn-back" onclick="App.navigate('home')">
+          <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+        </button>
+        <div>
+          <h2 class="page-title">چیرۆکەکان</h2>
+          <p class="page-sub">چیرۆکی کوردی بە عەرەبی — لەگەڵ وەرگێڕان</p>
+        </div>
+      </div>
+
+      <!-- Stories List -->
+      <div id="storiesList">
+        <div class="row g-4" id="storyCards"></div>
+      </div>
+
+      <!-- Story Reader -->
+      <div id="storyReader" class="d-none">
+        <div class="story-scroll-bar-wrap">
+          <div id="storyScrollBar" class="story-scroll-bar"></div>
+        </div>
+        <button class="btn btn-back mb-4" onclick="StoryModule.back()">
+          <i class="bi bi-arrow-right me-1"></i> گەڕانەوە بۆ لیستە
+        </button>
+        <div class="story-container" id="storyContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ QUIZ SECTION ══════════ -->
+  <section id="section-quiz" class="section">
+    <div class="container py-5">
+      <div class="page-header">
+        <button class="btn btn-back" onclick="App.navigate('home')">
+          <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+        </button>
+        <div>
+          <h2 class="page-title">تاقیکردنەوە</h2>
+          <p class="page-sub">زانستت بتاقیبکەرەوە لەگەڵ پرسیارەکانمان</p>
+        </div>
+      </div>
+
+      <!-- Quiz Menu -->
+      <div id="quizMenu">
+        <div class="row g-4" id="quizTypeCards"></div>
+      </div>
+
+      <!-- Active Quiz -->
+      <div id="quizActive" class="d-none">
+        <div class="quiz-wrapper">
+          <!-- Progress Bar -->
+          <div class="quiz-progress-bar mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span id="quizProgressText">پرسیار ۱ لە ۱۰</span>
+              <div class="d-flex align-items-center gap-3">
+                <div class="quiz-timer" id="quizTimer">20</div>
+                <span id="quizScoreText">نمرە: ۰</span>
+              </div>
+            </div>
+            <div class="progress" style="height:8px">
+              <div class="progress-bar bg-success" id="quizProgressBar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Question Card -->
+          <div class="quiz-question-card" id="quizQuestionCard">
+            <div class="quiz-question-text" id="quizQuestionText"></div>
+            <div class="quiz-arabic-area">
+              <div class="quiz-arabic-main" id="quizArabicText"></div>
+              <button class="quiz-hint-btn" id="quizHintBtn" onclick="QuizModule.useHint()" title="ئامۆژگاری" style="display:none">
+                <i class="bi bi-lightbulb-fill"></i> ئامۆژگاری
+              </button>
+            </div>
+            <div class="quiz-hint-text" id="quizHintText" style="display:none"></div>
+            <div class="quiz-options" id="quizOptions"></div>
+            <div class="quiz-feedback d-none" id="quizFeedback"></div>
+            <button class="btn btn-quiz-next d-none mt-3" id="quizNextBtn" onclick="QuizModule.next()">
+              پرسیاری دواتر <i class="bi bi-arrow-left ms-2"></i>
+            </button>
+            <div class="quiz-key-hint" id="quizKeyHint">
+              <i class="bi bi-keyboard me-1"></i>کلیلی ١-٤ بۆ وەڵام، Enter بۆ دواتر
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz Result -->
+      <div id="quizResult" class="d-none">
+        <div class="quiz-result-card text-center">
+          <div class="result-emoji" id="resultEmoji">🏆</div>
+          <h3 class="result-title" id="resultTitle">ئاوایت کرد!</h3>
+          <p class="result-subtitle" id="resultSubtitle"></p>
+          <div class="result-stats">
+            <div class="rs-item">
+              <span class="rs-num" id="resultScore">0</span>
+              <span class="rs-label">نمرەی گشتی</span>
+            </div>
+            <div class="rs-item">
+              <span class="rs-num" id="resultCorrect">0</span>
+              <span class="rs-label">وەڵامی دروست</span>
+            </div>
+            <div class="rs-item">
+              <span class="rs-num" id="resultPercent">0%</span>
+              <span class="rs-label">ڕێژەی سەرکەوتن</span>
+            </div>
+          </div>
+          <div class="d-flex gap-3 justify-content-center mt-4">
+            <button class="btn btn-primary btn-lg" onclick="QuizModule.restart()">
+              <i class="bi bi-arrow-counterclockwise me-2"></i> دووبارە
+            </button>
+            <button class="btn btn-outline-primary btn-lg" onclick="App.navigate('quiz')">
+              <i class="bi bi-grid me-2"></i> جۆری تر
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ PROGRESS SECTION ══════════ -->
+  <section id="section-progress" class="section">
+    <div class="container py-5">
+      <div class="page-header">
+        <button class="btn btn-back" onclick="App.navigate('home')">
+          <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+        </button>
+        <div>
+          <h2 class="page-title">پێشکەوتنت</h2>
+          <p class="page-sub">شوێنپێچکردنی ئەردانی و پێشکەوتنی فێربوون</p>
+        </div>
+      </div>
+
+      <!-- Rank Card -->
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="rank-card-container" id="rankCard"></div>
+        </div>
+      </div>
+
+      <!-- Overview Cards -->
+      <div class="row g-4 mb-5" id="progressOverview"></div>
+
+      <!-- Detailed Progress -->
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="progress-detail-card">
+            <h5><i class="bi bi-alphabet text-primary me-2"></i>پیتەکان</h5>
+            <div id="letterProgress"></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="progress-detail-card">
+            <h5><i class="bi bi-trophy-fill text-warning me-2"></i>دەستکەوتەکان</h5>
+            <div id="achievements"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz History Chart -->
+      <div class="row g-4 mt-1">
+        <div class="col-12">
+          <div class="progress-detail-card">
+            <h5><i class="bi bi-bar-chart-line-fill text-info me-2"></i>مێژووی تاقیکردنەوەکان</h5>
+            <div id="quizHistory"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Heatmap -->
+      <div class="row g-4 mt-1">
+        <div class="col-12">
+          <div class="progress-detail-card">
+            <h5><i class="bi bi-calendar3 text-success me-2"></i>چالاکی ٢٨ ڕۆژی ڕابردوو</h5>
+            <div id="activityHeatmap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Button -->
+      <div class="text-center mt-4 d-flex justify-content-center gap-3 flex-wrap">
+        <button class="btn btn-outline-info" onclick="ProgressModule.copyProgress()">
+          <i class="bi bi-clipboard2-data me-2"></i>کۆپیکردنی خولاصەی پێشکەوتن
+        </button>
+        <button class="btn btn-outline-danger" onclick="ProgressModule.reset()">
+          <i class="bi bi-trash3 me-2"></i>سڕینەوەی هەموو پێشکەوتن
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== TOAST NOTIFICATION ===== -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="appToast" class="app-toast toast align-items-center border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FLASHCARD OVERLAY ===== -->
+<div id="flashcardOverlay" class="flashcard-overlay d-none">
+  <div class="fc-container">
+    <!-- Header -->
+    <div class="fc-header">
+      <span id="fcCat" class="fc-cat-label"></span>
+      <div class="fc-header-right">
+        <span id="fcLearnedBadge" class="fc-learned-badge" style="display:none"><i class="bi bi-check-circle-fill"></i> فێrbooتت</span>
+        <span id="fcProgress" class="fc-prog-text">1 / 1</span>
+        <button class="fc-close-btn" onclick="FlashcardModule.close()"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="fc-progress-bar"><div id="fcProgressInner" class="fc-progress-inner" style="width:10%"></div></div>
+    <!-- Card -->
+    <div id="fcCard" class="fc-card" onclick="FlashcardModule.flip()">
+      <div class="fc-face fc-front">
+        <div class="fc-hint">کلیک بکە بۆ بینینی وەڵام</div>
+        <div id="fcArabic" class="fc-arabic-big"></div>
+        <div id="fcTranslit" class="fc-translit"></div>
+        <button class="speak-btn lm-speak mt-2" onclick="event.stopPropagation();SpeechModule.speak(this.dataset.t)" id="fcSpeakFront" data-t=""><i class="bi bi-volume-up-fill"></i></button>
+      </div>
+      <div class="fc-face fc-back">
+        <div id="fcKurdish" class="fc-kurdish-big"></div>
+        <div id="fcExample" class="fc-example"></div>
+        <div id="fcExampleTr" class="fc-example-tr"></div>
+        <button class="speak-btn speak-btn-sm mt-2" onclick="event.stopPropagation();SpeechModule.speak(this.dataset.t)" id="fcSpeakBack" data-t=""><i class="bi bi-volume-up-fill"></i></button>
+      </div>
+    </div>
+    <!-- Controls -->
+    <div class="fc-controls">
+      <button class="fc-nav-btn" onclick="FlashcardModule.prev()" title="پێشتر (→)">
+        <i class="bi bi-arrow-right"></i>
+      </button>
+      <button class="fc-flip-btn" onclick="FlashcardModule.flip()">
+        <i class="bi bi-arrow-repeat me-2"></i>بچەرخێنە
+      </button>
+      <button id="fcMarkBtn" class="btn btn-outline-success btn-sm" onclick="FlashcardModule.markLearned()">
+        فێربووم ✔
+      </button>
+      <button class="fc-nav-btn" onclick="FlashcardModule.next()" title="دواتر (←)">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+    </div>
+    <!-- Key hint -->
+    <div class="fc-key-hint"><i class="bi bi-keyboard me-1"></i>Space=بچەرخێنە &nbsp; ←=دواتر &nbsp; →=پێشتر &nbsp; Enter=فێربووم &nbsp; Esc=داخستن</div>
+  </div>
+</div>
+
+<!-- ===== LETTER QUIZ OVERLAY ===== -->
+<div id="lqOverlay" class="lq-overlay d-none">
+  <div class="lq-container">
+    <div class="lq-header">
+      <span class="lq-title"><i class="bi bi-lightning-fill me-2"></i>تاقیکردنەوەی پیتەکان</span>
+      <div class="d-flex align-items-center gap-2">
+        <span id="lqCounter" class="lq-counter">1 / 10</span>
+        <button class="fc-close-btn" onclick="LetterQuizModule.close()"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+    <div class="lq-progress-bar"><div id="lqProgressBar" class="lq-progress-inner" style="width:0%"></div></div>
+    <div id="lqQuestion">
+      <div class="lq-letter-display">
+        <div id="lqLetterBig" class="lq-arabic-big"></div>
+        <div id="lqLetterName" class="lq-letter-name"></div>
+      </div>
+      <p class="lq-prompt">ناوی کوردیی ئەم پیتە بەرگێرە:</p>
+      <div id="lqOptions" class="lq-options"></div>
+      <div id="lqFeedback" class="lq-feedback d-none"></div>
+      <button id="lqNext" class="btn btn-primary mt-3 d-none" onclick="LetterQuizModule.next()">
+        دواتر <i class="bi bi-arrow-left ms-2"></i>
+      </button>
+    </div>
+    <div id="lqResult" class="d-none"></div>
+  </div>
+</div>
+
+<!-- ===== KEYBOARD SHORTCUTS MODAL ===== -->
+<div class="modal fade" id="shortcutsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shortcuts-modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title"><i class="bi bi-keyboard me-2 text-primary"></i>کلیلی میانبرەکان</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcuts-section">
+          <div class="shortcuts-section-title">🃏 فلاشکارد</div>
+          <div class="shortcut-row"><kbd>Space</kbd> / <kbd>F</kbd> <span>بچەرخێنەی کارت</span></div>
+          <div class="shortcut-row"><kbd>←</kbd> / <kbd>→</kbd> <span>ناوبەری نێوان کارتەکان</span></div>
+          <div class="shortcut-row"><kbd>Enter</kbd> <span>فێربووم ✔</span></div>
+          <div class="shortcut-row"><kbd>Esc</kbd> <span>داخستنی فلاشکارد</span></div>
+        </div>
+        <div class="shortcuts-section">
+          <div class="shortcuts-section-title">🎯 تاقیکردنەوە</div>
+          <div class="shortcut-row"><kbd>1</kbd> – <kbd>4</kbd> <span>هەمبڕێنی وەڵامی یەکەم–چوارەم</span></div>
+          <div class="shortcut-row"><kbd>Enter</kbd> <span>پرسیاری دواتر</span></div>
+          <div class="shortcut-row"><kbd>?</kbd> <span>نیشاندانی ئامۆژگاری</span></div>
+        </div>
+        <div class="shortcuts-section">
+          <div class="shortcuts-section-title">⚡ پیتەکان</div>
+          <div class="shortcut-row"><kbd>?</kbd> <span>نیشاندانی ئەم مۆدالە لە هەتبوو دانان</span></div>
+        </div>
+        <p class="shortcuts-tip"><i class="bi bi-info-circle me-1"></i>لە هەر شوێنێکی ئەپەکەدا کلیلی <kbd>?</kbd> بدە بۆ نیشاندانی ئەم لیستە.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOADING OVERLAY ===== -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-content">
+    <div class="loading-arabic">عەرەبی</div>
+    <div class="loading-spinner"></div>
+    <p>چاوەڕوان بە...</p>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

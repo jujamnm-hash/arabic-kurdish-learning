@@ -1,0 +1,19 @@
+{
+  "name": "arabic-kurdish-learning",
+  "version": "1.0.0",
+  "description": "سیستەمی فێربوونی زمانی عەرەبی بە کوردی — Kurdish Arabic Learning System",
+  "main": "index.html",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "dev": "npx live-server --port=5500 --open=index.html",
+    "build:dev": "tsc && npx live-server --port=5500 --open=index.html"
+  },
+  "keywords": ["arabic", "kurdish", "learning", "sorani", "language"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "live-server": "^1.2.2"
+  }
+}

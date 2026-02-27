@@ -1,0 +1,22 @@
+{
+  "name": "فێربوونی زمانی عەرەبی",
+  "short_name": "عەرەبی",
+  "description": "سیستەمی فێربوونی زمانی عەرەبی بە کوردی سۆرانی",
+  "start_url": "/arabic-kurdish-learning/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "lang": "ckb",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text y='.9em' font-size='70' x='50%' dominant-baseline='middle' text-anchor='middle' font-family='serif'>ع</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "language"],
+  "screenshots": []
+}
