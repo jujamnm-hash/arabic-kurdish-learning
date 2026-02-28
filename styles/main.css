@@ -1132,6 +1132,225 @@ body {
 }
 
 /* ══════════════════════════════════════
+   MOBILE BOTTOM NAV
+══════════════════════════════════════ */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  background: rgba(15,23,42,0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--dark-border);
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  padding: 0;
+  height: 62px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mbn-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--light-text);
+  font-size: 0.62rem;
+  font-family: var(--font-main);
+  gap: 3px;
+  padding: 8px 4px 6px;
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+  position: relative;
+}
+.mbn-btn i {
+  font-size: 1.25rem;
+  display: block;
+  transition: transform var(--transition);
+}
+.mbn-btn.active {
+  color: var(--primary-light);
+}
+.mbn-btn.active i {
+  transform: translateY(-2px);
+}
+.mbn-btn.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 0 0 4px 4px;
+}
+.mbn-btn:active { background: rgba(99,102,241,0.12); }
+
+body[data-theme="light"] .mobile-bottom-nav {
+  background: rgba(255,255,255,0.97);
+  border-top-color: #e2e8f0;
+}
+body[data-theme="light"] .mbn-btn.active { color: var(--primary); }
+
+/* ══════════════════════════════════════
+   COMPREHENSIVE MOBILE RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 991px) {
+  /* Navbar: hide text on small, keep badges compact */
+  .nav-badge-row { flex-wrap: nowrap; gap: 0.4rem !important; }
+  .rank-badge { font-size: 0.72rem; padding: 0.3rem 0.6rem; }
+  .badge-xp   { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+  .streak-badge { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+
+  /* Add bottom padding so content doesn't hide behind bottom nav */
+  .main-wrapper { padding-bottom: 70px; }
+}
+
+@media (max-width: 767px) {
+  /* ── Navbar ── */
+  #mainNav .container { padding: 0 1rem; }
+  .brand-text { font-size: 1.05rem; }
+  .brand-icon { font-size: 1.3rem; }
+
+  /* ── Hero ── */
+  .hero-section { padding: 48px 0 40px; text-align: center; }
+  .min-vh-screen { min-height: auto; }
+  .hero-title { font-size: 2rem; margin-top: 0.75rem; }
+  .hero-subtitle { font-size: 0.95rem; margin: 0.75rem auto; }
+  .hero-stats { justify-content: center; }
+  .hero-arabic-display { display: none; }
+  .btn-hero-primary, .btn-hero-secondary { width: 100%; text-align: center; }
+  .d-flex.gap-3.mt-4.flex-wrap { flex-direction: column; }
+
+  /* ── Home sections ── */
+  .container { padding-left: 1rem; padding-right: 1rem; }
+  .section-title { font-size: 1.5rem; }
+  .feature-card { padding: 1.25rem 1rem; }
+  .feature-icon { width: 56px; height: 56px; font-size: 1.8rem; }
+
+  /* ── Page Headers ── */
+  .page-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+  .page-title { font-size: 1.5rem; }
+
+  /* ── Filter Tabs — horizontal scroll ── */
+  .filter-tabs, .vocab-categories {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.4rem !important;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .filter-tabs::-webkit-scrollbar,
+  .vocab-categories::-webkit-scrollbar { display: none; }
+  .filter-btn, .vocab-cat-btn { flex-shrink: 0; font-size: 0.82rem; padding: 0.4rem 0.85rem; }
+
+  /* ── Letters ── */
+  .letter-card { padding: 1rem 0.6rem; }
+  .lc-arabic { font-size: 2.6rem; }
+  .lc-name { font-size: 0.82rem; }
+  .lc-kurdish { font-size: 0.7rem; }
+  .lm-letter-display { font-size: 5.5rem; }
+  .lm-forms { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+
+  /* ── Vocab Cards ── */
+  .vocab-card { min-height: 180px; }
+  .vc-arabic { font-size: 2rem !important; }
+  .vc-back-content { padding: 0.5rem; }
+
+  /* ── Story ── */
+  .story-body, .story-header { padding: 1rem; }
+  .story-title-ar { font-size: 1.5rem; display: block; }
+  .sp-arabic { font-size: 1.35rem; line-height: 1.9; }
+  .sp-translation { font-size: 0.88rem; }
+  .story-card-banner { height: 90px; font-size: 2.5rem; }
+
+  /* ── Story reader toolbar layout ── */
+  .story-header .d-flex.flex-wrap { gap: 0.5rem !important; }
+  .sp-hideall-btn { font-size: 0.72rem; padding: 0.25rem 0.6rem; }
+
+  /* ── Quiz ── */
+  .quiz-type-card { padding: 1.25rem 1rem; }
+  .qt-icon { font-size: 2.2rem; }
+  .quiz-question-box { padding: 1.25rem 1rem; }
+  .quiz-question-text { font-size: 1rem; }
+  .quiz-arabic-text { font-size: 1.8rem; }
+  .quiz-opt-btn { padding: 0.75rem 1rem; font-size: 0.92rem; min-height: 52px; }
+  #quizHintBtn { font-size: 0.82rem; padding: 0.4rem 0.85rem; }
+
+  /* ── Quiz result ── */
+  .result-emoji { font-size: 3.5rem; }
+  .result-score { font-size: 2.5rem; }
+  .result-stats { flex-direction: column; gap: 0.5rem; }
+
+  /* ── Progress section ── */
+  .progress-stat-card { padding: 1rem 0.6rem; }
+  .psc-value { font-size: 1.5rem; }
+  .rank-display { flex-direction: column; text-align: center; align-items: center; }
+  .rank-icon-big { font-size: 3.5rem; }
+  .rank-name { font-size: 1.5rem; }
+
+  /* ── Flashcard overlay ── */
+  .flashcard-overlay { padding: 0.5rem; }
+  .fc-card-wrap { height: 260px; }
+  .fc-front, .fc-back { padding: 1.25rem; }
+  .fc-arabic { font-size: 3.5rem; }
+
+  /* ── Letter Quiz overlay ── */
+  #lqOverlay .lq-question-wrap { padding: 1rem; }
+  .lq-letter-big { font-size: 5rem; }
+  .lq-opt-btn { padding: 0.7rem 0.5rem; font-size: 0.88rem; min-height: 48px; }
+
+  /* ── Word of Day / Goals ── */
+  .wod-body { padding: 1rem; }
+  .wod-arabic { font-size: 2.2rem; }
+
+  /* ── Activity heatmap ── */
+  .hm-grid { gap: 3px; }
+  .hm-cell { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── Rank-up overlay ── */
+  .rank-up-card { padding: 2rem 1.75rem; }
+  .rank-up-name { font-size: 1.6rem; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 1.7rem; }
+  .hero-section { padding: 36px 0 30px; }
+  .page-title { font-size: 1.3rem; }
+
+  /* Nav badges: hide rank text label on very small screens */
+  .rank-badge .rank-txt { display: none; }
+  .badge-xp { padding: 0.28rem 0.5rem; }
+  .streak-badge { padding: 0.28rem 0.5rem; }
+
+  /* Full-width buttons in quiz result */
+  #quizResult .d-flex.gap-3 { flex-direction: column; }
+  #quizResult .d-flex.gap-3 .btn { width: 100%; }
+
+  /* Stat cards 2-per-row */
+  #progressOverview .col-6 { flex: 0 0 50%; max-width: 50%; }
+
+  /* Vocab cards single column on very narrow */
+  #vocabGrid .col-6 { flex: 0 0 100%; max-width: 100%; }
+  .vc-arabic { font-size: 2.5rem !important; }
+
+  /* Flashcard fill screen height */
+  .flashcard-overlay { padding: 0; border-radius: 0; }
+  .fc-header { border-radius: 0; }
+  .fc-card-wrap { height: 220px; }
+
+  /* Story moral */
+  .story-moral { padding: 1rem; }
+  .story-moral-title { font-size: 1rem; }
+}
+
+/* ══════════════════════════════════════
    SPEECH BUTTON
 ══════════════════════════════════════ */
 .speak-btn {

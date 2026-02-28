@@ -78,8 +78,8 @@
         </li>
       </ul>
       <!-- Progress Badge -->
-      <div class="d-flex align-items-center gap-2">
-        <button class="shortcuts-help-btn" data-bs-toggle="modal" data-bs-target="#shortcutsModal" title="کلیلی میانبر (?)">
+      <div class="d-flex align-items-center gap-2 nav-badge-row">
+        <button class="shortcuts-help-btn d-none d-lg-inline-flex" data-bs-toggle="modal" data-bs-target="#shortcutsModal" title="کلیلی میانبر (?)">  
           <i class="bi bi-keyboard"></i>
         </button>
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="App.toggleTheme()" title="گۆڕینی ڕووکار">
@@ -88,7 +88,7 @@
         <span class="rank-badge" id="rankBadge" title="گەیشت">🌱 نوێخواز</span>
         <span class="badge-xp" id="navXP">
           <i class="bi bi-star-fill"></i>
-          <span id="xpCount">0</span> XP
+          <span id="xpCount">0</span> <span class="d-none d-sm-inline">XP</span>
         </span>
         <div class="streak-badge" id="streakBadge" title="ڕیزی ڕۆژانە">
           🔥 <span id="streakCount">0</span>
@@ -659,6 +659,34 @@
     <p>چاوەڕوان بە...</p>
   </div>
 </div>
+
+<!-- ===== MOBILE BOTTOM NAV ===== -->
+<nav class="mobile-bottom-nav d-lg-none" id="mobileBottomNav">
+  <button class="mbn-btn active" data-section="home" onclick="App.navigate('home')">
+    <i class="bi bi-house-door-fill"></i>
+    <span>ماڵەوە</span>
+  </button>
+  <button class="mbn-btn" data-section="letters" onclick="App.navigate('letters')">
+    <i class="bi bi-alphabet-uppercase"></i>
+    <span>پیتەکان</span>
+  </button>
+  <button class="mbn-btn" data-section="vocab" onclick="App.navigate('vocab')">
+    <i class="bi bi-journal-text"></i>
+    <span>وشەکان</span>
+  </button>
+  <button class="mbn-btn" data-section="stories" onclick="App.navigate('stories')">
+    <i class="bi bi-book-half"></i>
+    <span>چیرۆک</span>
+  </button>
+  <button class="mbn-btn" data-section="quiz" onclick="App.navigate('quiz')">
+    <i class="bi bi-patch-question-fill"></i>
+    <span>تاقی</span>
+  </button>
+  <button class="mbn-btn" data-section="progress" onclick="App.navigate('progress')">
+    <i class="bi bi-bar-chart-fill"></i>
+    <span>پێشکەوتن</span>
+  </button>
+</nav>
 
 <!-- ===== SCRIPTS ===== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

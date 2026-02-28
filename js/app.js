@@ -121,9 +121,13 @@ const App = {
     const el = document.getElementById('section-' + section);
     if (!el) return;
     el.classList.add('active');
-    // update nav
+    // update top nav
     document.querySelectorAll('.nav-pill').forEach(a => {
       a.classList.toggle('active', a.dataset.section === section);
+    });
+    // update bottom mobile nav
+    document.querySelectorAll('.mbn-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.section === section);
     });
     appState.currentSection = section;
     saveState(appState);
