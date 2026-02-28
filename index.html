@@ -82,6 +82,9 @@
         <button class="shortcuts-help-btn d-none d-lg-inline-flex" data-bs-toggle="modal" data-bs-target="#shortcutsModal" title="کلیلی میانبر (?)">  
           <i class="bi bi-keyboard"></i>
         </button>
+        <button class="shortcuts-help-btn" onclick="GlobalSearch.open()" title="گەڕان (Ctrl+K)">
+          <i class="bi bi-search"></i>
+        </button>
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="App.toggleTheme()" title="گۆڕینی ڕووکار">
           <i class="bi bi-sun-fill"></i>
         </button>
@@ -187,7 +190,7 @@
             <div class="feature-icon" style="--c:#f59e0b">📖</div>
             <h5 class="feature-title">وشەکان</h5>
             <p class="feature-desc">وشەی ڕۆژانە، ژمارە، رەنگ، ماڵ، خوێندن و زۆری تر</p>
-            <span class="feature-tag">مامناوەند</span>
+            <span class="feature-tag" id="vocabHomeBadge">مامناوەند</span>
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -657,6 +660,20 @@
     <div class="loading-arabic">عەرەبی</div>
     <div class="loading-spinner"></div>
     <p>چاوەڕوان بە...</p>
+  </div>
+</div>
+
+<!-- ===== GLOBAL SEARCH OVERLAY ===== -->
+<div id="globalSearchOverlay" class="gs-overlay d-none" onclick="GlobalSearch.closeOnBg(event)">
+  <div class="gs-box">
+    <div class="gs-input-wrap">
+      <i class="bi bi-search gs-icon"></i>
+      <input id="gsInput" class="gs-input" type="text" placeholder="گەڕان لە پیت، وشە، چیرۆک..." oninput="GlobalSearch.query(this.value)" onkeydown="GlobalSearch.onKey(event)" autocomplete="off" />
+      <button class="gs-close-btn" onclick="GlobalSearch.close()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="gsResults" class="gs-results">
+      <p class="gs-hint">داوای بیکە بنوسە... یان <kbd>Ctrl+K</kbd> بدە</p>
+    </div>
   </div>
 </div>
 

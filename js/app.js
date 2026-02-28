@@ -156,6 +156,24 @@ const App = {
       el.onclick = () => { App.navigate('letters'); setTimeout(() => LetterModule.openDetail(letter.id), 300); };
       container.appendChild(el);
     });
+    // Due badge on vocab feature card
+    const vBadge = document.getElementById('vocabHomeBadge');
+    if (vBadge) {
+      const now = Date.now(), reviewDelay = 12 * 3600 * 1000;
+      const due = VOCABULARY.filter(w =>
+        appState.learnedVocab.includes(w.id) &&
+        (!appState.vocabLastSeen?.[w.id] || now - appState.vocabLastSeen[w.id] > reviewDelay)
+      ).length;
+      if (due > 0) {
+        vBadge.textContent = `🔄 ${due} دووبارەکێژە`;
+        vBadge.style.background = 'rgba(239,68,68,.18)';
+        vBadge.style.color = '#f87171';
+        vBadge.style.borderColor = 'rgba(239,68,68,.35)';
+      } else {
+        vBadge.textContent = 'مامناوەند';
+        vBadge.style = '';
+      }
+    }
     this.renderWordOfDay();
     this.renderDailyGoals();
   },
@@ -318,6 +336,10 @@ const App = {
     document.addEventListener('keydown', (e) => {
       if (e.key === '?' && document.activeElement.tagName !== 'INPUT') {
         bootstrap.Modal.getOrCreateInstance(document.getElementById('shortcutsModal')).show();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        GlobalSearch.open();
       }
     });
     // Hide loading
@@ -703,11 +725,29 @@ const FlashcardModule = {
       else if (e.key === 'Escape') this.close();
     };
     document.addEventListener('keydown', this._keyHandler);
+    // Touch swipe support
+    const overlay = document.getElementById('flashcardOverlay');
+    let _tx = 0, _ty = 0;
+    this._touchStart = e => { _tx = e.touches[0].clientX; _ty = e.touches[0].clientY; };
+    this._touchEnd = e => {
+      const dx = e.changedTouches[0].clientX - _tx;
+      const dy = e.changedTouches[0].clientY - _ty;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 45) {
+        if (dx < 0) this.next(); else this.prev();
+      } else if (dy < -45 && Math.abs(dy) > Math.abs(dx)) {
+        this.flip();
+      }
+    };
+    overlay.addEventListener('touchstart', this._touchStart, { passive: true });
+    overlay.addEventListener('touchend',   this._touchEnd,   { passive: true });
   },
 
   close() {
-    document.getElementById('flashcardOverlay').classList.add('d-none');
-    if (this._keyHandler) { document.removeEventListener('keydown', this._keyHandler); this._keyHandler = null; }
+    const overlay = document.getElementById('flashcardOverlay');
+    overlay.classList.add('d-none');
+    if (this._keyHandler)  { document.removeEventListener('keydown', this._keyHandler); this._keyHandler = null; }
+    if (this._touchStart)  { overlay.removeEventListener('touchstart', this._touchStart); this._touchStart = null; }
+    if (this._touchEnd)    { overlay.removeEventListener('touchend',   this._touchEnd);   this._touchEnd   = null; }
   },
 
   _render() {
@@ -881,7 +921,12 @@ const StoryModule = {
           <span><i class="bi bi-chat-dots me-1"></i>${story.wordCount} وشە</span>
           <span class="story-card-level level-${story.level} ms-2">${this.levelLabel(story.level)}</span>
           <button class="listen-btn" id="listenBtn" onclick="StoryModule.startListen()"><i class="bi bi-headphones me-2"></i>گوێگرتن</button>
-          <button class="sp-hideall-btn ms-auto" id="hideAllBtn" onclick="StoryModule.toggleAllTranslations()"><i class="bi bi-eye-slash me-1"></i>دۆخی پێشکەوتوو</button>
+          <button class="sp-hideall-btn" id="hideAllBtn" onclick="StoryModule.toggleAllTranslations()"><i class="bi bi-eye-slash me-1"></i>دۆخی پێشکەوتوو</button>
+          <div class="fs-controls ms-auto">
+            <button class="fs-btn" onclick="StoryModule.changeFontSize(-1)" title="کچکتر">A−</button>
+            <button class="fs-btn" onclick="StoryModule.changeFontSize(0)" title="بەبێدەبینەوە">A</button>
+            <button class="fs-btn" onclick="StoryModule.changeFontSize(1)" title="uگووڵتر">A+</button>
+          </div>
         </div>
       </div>
       <div class="story-body">
@@ -972,6 +1017,16 @@ const StoryModule = {
       : '<i class="bi bi-eye-slash me-1"></i>دۆخی پێشکەوتوو';
   },
 
+  _fontSize: 1,   // 0=small 1=medium 2=large 3=xlarge
+  _fontSizes: ['.95rem', '1.15rem', '1.35rem', '1.6rem'],
+  changeFontSize(dir) {
+    if (dir === 0) { this._fontSize = 1; }
+    else { this._fontSize = Math.max(0, Math.min(3, this._fontSize + dir)); }
+    const size = this._fontSizes[this._fontSize];
+    document.querySelectorAll('.sp-arabic').forEach(el => el.style.fontSize = size);
+    document.querySelectorAll('.sp-translation').forEach(el => el.style.fontSize = dir === 0 ? '' : `calc(${size} * 0.72)`);
+  },
+
   markRead(id) {
     if (!appState.readStories.includes(id)) {
       appState.readStories.push(id);
@@ -983,6 +1038,80 @@ const StoryModule = {
     } else {
       App.showToast('پێشتر ئەم چیرۆکەت خوێندەوە', 'info');
     }
+  }
+};
+
+/* ═══════════════════════════════════════
+   GLOBAL SEARCH
+═══════════════════════════════════════ */
+const GlobalSearch = {
+  _activeIdx: -1,
+  _results: [],
+
+  open() {
+    document.getElementById('globalSearchOverlay').classList.remove('d-none');
+    document.body.style.overflow = 'hidden';
+    const inp = document.getElementById('gsInput');
+    inp.value = '';
+    document.getElementById('gsResults').innerHTML = '<p class="gs-hint">داوای بیکە بنووسە...</p>';
+    this._results = []; this._activeIdx = -1;
+    setTimeout(() => inp.focus(), 80);
+  },
+
+  close() {
+    document.getElementById('globalSearchOverlay').classList.add('d-none');
+    document.body.style.overflow = '';
+  },
+
+  closeOnBg(e) { if (e.target.id === 'globalSearchOverlay') this.close(); },
+
+  onKey(e) {
+    const items = document.querySelectorAll('.gs-item');
+    if (e.key === 'Escape') { this.close(); return; }
+    if (e.key === 'ArrowDown')  { e.preventDefault(); this._activeIdx = Math.min(this._activeIdx + 1, items.length - 1); this._hi(items); }
+    if (e.key === 'ArrowUp')    { e.preventDefault(); this._activeIdx = Math.max(this._activeIdx - 1, 0); this._hi(items); }
+    if (e.key === 'Enter' && this._activeIdx >= 0 && items[this._activeIdx]) items[this._activeIdx].click();
+  },
+
+  _hi(items) {
+    items.forEach((el, i) => el.classList.toggle('gs-active', i === this._activeIdx));
+    if (items[this._activeIdx]) items[this._activeIdx].scrollIntoView({ block: 'nearest' });
+  },
+
+  query(q) {
+    q = (q || '').trim();
+    const el = document.getElementById('gsResults');
+    if (!q || q.length < 2) {
+      el.innerHTML = '<p class="gs-hint">داوای بیکە بنووسە...</p>';
+      this._results = []; this._activeIdx = -1; return;
+    }
+    const lq = q.toLowerCase();
+    const results = [];
+    ARABIC_LETTERS.forEach(l => {
+      if (l.arabic.includes(q) || l.name.toLowerCase().includes(lq) || l.kurdishName.toLowerCase().includes(lq) || l.transliteration.toLowerCase().includes(lq))
+        results.push({ icon: '🔤', title: `${l.arabic} — ${l.kurdishName}`, sub: `پیت • ${l.name}`, action: () => { this.close(); App.navigate('letters'); setTimeout(() => LetterModule.openDetail(l.id), 350); } });
+    });
+    VOCABULARY.forEach(w => {
+      if (w.arabic.includes(q) || w.kurdish.toLowerCase().includes(lq) || w.transliteration.toLowerCase().includes(lq)) {
+        const cat = VOCAB_CATEGORIES[w.category];
+        results.push({ icon: cat?.icon || '📖', title: `${w.arabic} — ${w.kurdish}`, sub: `وشە • [${w.transliteration}]  ${cat?.label || ''}`, action: () => { this.close(); App.navigate('vocab'); setTimeout(() => { VocabModule.filterByCategory('all'); setTimeout(() => VocabModule.search(q), 100); }, 350); } });
+      }
+    });
+    STORIES.forEach(s => {
+      if (s.titleArabic.includes(q) || s.titleKurdish.toLowerCase().includes(lq) || s.description.toLowerCase().includes(lq))
+        results.push({ icon: s.emoji, title: `${s.titleArabic} — ${s.titleKurdish}`, sub: `چیرۆک • ${s.description}`, action: () => { this.close(); App.navigate('stories'); setTimeout(() => StoryModule.open(s.id), 350); } });
+    });
+    this._results = results; this._activeIdx = -1;
+    if (!results.length) { el.innerHTML = `<p class="gs-hint">هیچ ئەنجام نەدۆزرایەوە بۆ «${q}»</p>`; return; }
+    el.innerHTML = results.slice(0, 12).map((r, i) => `
+      <div class="gs-item" onclick="GlobalSearch._results[${i}].action()">
+        <span class="gs-item-icon">${r.icon}</span>
+        <div class="gs-item-info">
+          <div class="gs-item-title">${r.title}</div>
+          <div class="gs-item-sub">${r.sub}</div>
+        </div>
+        <i class="bi bi-arrow-left gs-item-arrow"></i>
+      </div>`).join('');
   }
 };
 
