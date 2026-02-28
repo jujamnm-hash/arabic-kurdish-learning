@@ -261,6 +261,11 @@
       <div id="whatsNext"></div>
     </div>
 
+    <!-- Daily Sentence -->
+    <div class="container pb-4">
+      <div id="dailySentence"></div>
+    </div>
+
     <!-- TTS Speed Control -->
     <div class="container pb-5">
       <div class="tts-speed-row">
@@ -389,6 +394,9 @@
         </button>
         <button class="game-launch-btn" onclick="TypingPracticeModule.open()">
           <i class="bi bi-keyboard me-1"></i>نووسین
+        </button>
+        <button class="game-launch-btn md-launch-btn" onclick="MistakeDrillModule.open()">
+          <i class="bi bi-exclamation-triangle me-1"></i>دڕیلی هەڵەکان
         </button>
         <button class="game-launch-btn game-match-btn" onclick="MatchGameModule.open()">
           <i class="bi bi-grid-3x3-gap-fill me-1"></i>یاری دووبەرد
@@ -699,6 +707,24 @@
 <div id="numberDrillOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)NumberDrillModule.close()">
   <div class="lqz-box">
     <div id="ndContent" class="lqz-content"></div>
+  </div>
+</div>
+
+<!-- ===== VOCAB DETAIL OVERLAY ===== -->
+<div id="vocabDetailOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)VocabDetailModule.close()">
+  <div class="lqz-box vd-box">
+    <div class="lqz-box-header">
+      <span class="lqz-box-title"><i class="bi bi-book-open me-2"></i>وڕدەکانی وشە</span>
+      <button class="fc-close-btn" onclick="VocabDetailModule.close()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="vdContent" class="lqz-content"></div>
+  </div>
+</div>
+
+<!-- ===== MISTAKE DRILL OVERLAY ===== -->
+<div id="mistakeDrillOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)MistakeDrillModule.close()">
+  <div class="lqz-box">
+    <div id="mdContent" class="lqz-content"></div>
   </div>
 </div>
 

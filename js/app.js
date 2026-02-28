@@ -26,11 +26,13 @@ function loadState() {
     vocabNotes: {},
     dailyActivity: {},
     readStories: [],
+    readSentences: [],
     quizHistory: [],
     quizBestScores: {},
     quizMistakes: {},
     ttsSpeed: 1,
-    dailyChallenge: null
+    dailyChallenge: null,
+    unlockedAchievements: []
   };
 }
 
@@ -113,6 +115,44 @@ const SoundModule = {
 };
 
 /* ═══════════════════════════════════════
+   ACHIEVEMENTS
+═══════════════════════════════════════ */
+const ACHIEVEMENTS = [
+  { id:'first_letter',  icon:'🌱', name:'دەستپێکار',         desc:'یەکەم پیتت فێربووی',              check: () => appState.learnedLetters.length >= 1 },
+  { id:'five_letters',  icon:'🔤', name:'پیتی پێنج',         desc:'٥ پیتت فێربووی',                   check: () => appState.learnedLetters.length >= 5 },
+  { id:'first_vocab',   icon:'💬', name:'یەکەم وشە',         desc:'یەکەم وشەت فێربووی',              check: () => appState.learnedVocab.length >= 1 },
+  { id:'first_story',   icon:'📚', name:'خوێندنکار',         desc:'یەکەم چیرۆکت خوێندەوە',           check: () => appState.readStories.length >= 1 },
+  { id:'numbers_10',    icon:'🔢', name:'ژمارەدان',           desc:'١٠ ژمارەی عەرەبی فێربووی',         check: () => (appState.learnedVocab||[]).filter(id => VOCABULARY.find(v=>v.id===id && v.category==='numbers')).length >= 10 },
+  { id:'xp_100',        icon:'🌟', name:'ستێرەی زانست',      desc:'١٠٠ XP کەسبکردت',                 check: () => appState.xp >= 100 },
+  { id:'vocab_20',      icon:'📖', name:'وشەزانی',           desc:'٢٠ وشەت فێربووی',                  check: () => appState.learnedVocab.length >= 20 },
+  { id:'quiz_5',        icon:'🎯', name:'تاقیکەرەوە',       desc:'٥ تاقیکردنەوەت کردووە',            check: () => appState.quizHistory.length >= 5 },
+  { id:'streak_3',      icon:'🔥', name:'سێ ڕۆژ',           desc:'٣ ڕۆژی دووام',                     check: () => appState.streak >= 3 },
+  { id:'xp_500',        icon:'💫', name:'مەستەر',             desc:'٥٠٠ XP کەسبکردت',                 check: () => appState.xp >= 500 },
+  { id:'streak_7',      icon:'⚡', name:'هەفت ڕۆژ',          desc:'٧ ڕۆژی دووام',                     check: () => appState.streak >= 7 },
+  { id:'vocab_40',      icon:'📘', name:'وشەزانی پێشکەوتوو', desc:'٤٠ وشەت فێربووی',                 check: () => appState.learnedVocab.length >= 40 },
+  { id:'all_letters',   icon:'🏆', name:'قاچەی عەرەبی',      desc:'هەموو ٢٨ پیتت فێربووی',            check: () => appState.learnedLetters.length >= 28 },
+  { id:'quiz_20',       icon:'🧠', name:'وریا',               desc:'٢٠ تاقیکردنەوەت کردووە',          check: () => appState.quizHistory.length >= 20 },
+  { id:'xp_1000',       icon:'👑', name:'پاشا',               desc:'١٠٠٠ XP کەسبکردت',                check: () => appState.xp >= 1000 },
+  { id:'all_vocab',     icon:'🎓', name:'ئامادەی تەواو',     desc:'هەموو وشەکانت فێربووی',            check: () => appState.learnedVocab.length >= VOCABULARY.length }
+];
+
+/* ═══════════════════════════════════════
+   DAILY SENTENCES
+═══════════════════════════════════════ */
+const DAILY_SENTENCES = [
+  { id:1,  arabic:'كيف حالك؟',                    transliteration:'كَيْفَ حَالُكَ',                  kurdish:'حالت چۆنە؟' },
+  { id:2,  arabic:'أنا بخير، شكراً',              transliteration:'أَنَا بِخَيْر، شُكْرًا',          kurdish:'باشم، سپاس' },
+  { id:3,  arabic:'ما اسمك؟',                      transliteration:'مَا اسْمُكَ',                     kurdish:'ناوت چییە؟' },
+  { id:4,  arabic:'أنا من كردستان',               transliteration:'أَنَا مِنْ كُرْدِسْتَان',         kurdish:'من لە کوردستانم' },
+  { id:5,  arabic:'من أين أنت؟',                  transliteration:'مِنْ أَيْنَ أَنْتَ',              kurdish:'لە کوێیتی؟' },
+  { id:6,  arabic:'يسعدني مقابلتك',               transliteration:'يَسْعَدُنِي مُقَابَلَتُكَ',       kurdish:'خۆشحالم باوەڕپێکیت' },
+  { id:7,  arabic:'كم الساعة الآن؟',              transliteration:'كَمِ السَّاعَة الآن',             kurdish:'ئێستا چەند ساعاتە؟' },
+  { id:8,  arabic:'أريد كوب ماء من فضلك',         transliteration:'أُرِيدُ كُوبَ مَاءٍ مِن فَضلك',  kurdish:'تکایە یەک کوپ ئاوم دەوێت' },
+  { id:9,  arabic:'أين الحمام؟',                   transliteration:'أَيْنَ الحَمَّام',                kurdish:'مەستوبە لە کوێیە؟' },
+  { id:10, arabic:'هل تتكلم العربية؟',             transliteration:'هَل تَتَكَلَّم العَرَبِيَّة',    kurdish:'عەرەبی قسەی دەکەی؟' }
+];
+
+/* ═══════════════════════════════════════
    XP RANKS
 ═══════════════════════════════════════ */
 const RANKS = [
@@ -190,6 +230,7 @@ const App = {
     this.renderDailyGoals();
     DailyChallengeModule.render();
     this.renderWhatsNext();
+    SentenceModule.render();
     // Sync TTS speed buttons
     const spd = appState.ttsSpeed ?? 1;
     document.querySelectorAll('.tts-speed-btn').forEach((b, i) => b.classList.toggle('active', i === spd));
@@ -349,6 +390,37 @@ const App = {
     this.showToast(`+${amount} XP کەسبکردت! 🌟`, 'success');
     const newRank = this.getRank().rank;
     if (newRank.name !== oldRankName) setTimeout(() => this.showRankUp(newRank), 800);
+    this.checkAchievements();
+  },
+
+  checkAchievements() {
+    if (!appState.unlockedAchievements) appState.unlockedAchievements = [];
+    const newlyUnlocked = [];
+    ACHIEVEMENTS.forEach(a => {
+      if (!appState.unlockedAchievements.includes(a.id) && a.check()) {
+        appState.unlockedAchievements.push(a.id);
+        newlyUnlocked.push(a);
+      }
+    });
+    if (newlyUnlocked.length) {
+      saveState(appState);
+      newlyUnlocked.forEach((a, i) => setTimeout(() => this._showAchievementToast(a), i * 1400 + 900));
+    }
+  },
+
+  _showAchievementToast(a) {
+    const el = document.createElement('div');
+    el.className = 'ach-toast';
+    el.innerHTML = `
+      <div class="ach-toast-icon">${a.icon}</div>
+      <div class="ach-toast-info">
+        <div class="ach-toast-title">دەستکەوت داکرا! 🎉</div>
+        <div class="ach-toast-name">${a.name}</div>
+        <div class="ach-toast-desc">${a.desc}</div>
+      </div>`;
+    document.body.appendChild(el);
+    setTimeout(() => el.classList.add('show'), 50);
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 600); }, 4200);
   },
 
   showRankUp(rank) {
@@ -394,6 +466,8 @@ const App = {
     if (appState.ttsSpeed    === undefined) { appState.ttsSpeed    = 1;    saveState(appState); }
     if (appState.dailyChallenge === undefined) { appState.dailyChallenge = null; saveState(appState); }
     if (!appState.quizMistakes)  { appState.quizMistakes  = {};   saveState(appState); }
+    if (!appState.unlockedAchievements) { appState.unlockedAchievements = []; saveState(appState); }
+    if (!appState.readSentences) { appState.readSentences = []; saveState(appState); }
     const xpEl = document.getElementById('xpCount');
     if (xpEl) xpEl.textContent = appState.xp;
     // restore theme
@@ -702,6 +776,7 @@ const VocabModule = {
           <div class="vc-category-badge">${VOCAB_CATEGORIES[word.category]?.icon || ''}</div>
           <div class="vc-front">
             <button class="vocab-fav-btn${(appState.favoriteVocab||[]).includes(word.id) ? ' active' : ''}" onclick="event.stopPropagation();VocabModule.toggleFavorite(${word.id},event)" title="بە مورد علاقە زیادبکە"><i class="bi bi-heart${(appState.favoriteVocab||[]).includes(word.id) ? '-fill' : ''}"></i></button>
+            <button class="vd-open-btn" onclick="event.stopPropagation();VocabDetailModule.open(${word.id})" title="وڕدەکانی زیاتر"><i class="bi bi-info-circle"></i></button>
             <div class="d-flex align-items-center justify-content-center gap-1">
               <span class="vc-arabic">${word.arabic}</span>
               <button class="speak-btn speak-btn-sm" onclick="event.stopPropagation();SpeechModule.speak(this.dataset.t)" data-t="${word.arabic.replace(/"/g,'&quot;')}" title="گوێبگرە"><i class="bi bi-volume-up-fill"></i></button>
@@ -2106,28 +2181,21 @@ const ProgressModule = {
   renderAchievements() {
     const container = document.getElementById('achievements');
     if (!container) return;
-    const achievements = [
-      { icon:'🌱', name:'دەستپێکار',      desc:'یەکەم پیتت فێربووی',          unlocked: appState.learnedLetters.length >= 1 },
-      { icon:'📚', name:'خوێندنکار',      desc:'یەکەم چیرۆکت خوێندەوە',       unlocked: appState.readStories.length >= 1 },
-      { icon:'🔢', name:'ژمارەدان',       desc:'ژمارەکانی ١ تا ١٠ فێربووی',   unlocked: appState.learnedVocab.filter(id => VOCABULARY.find(v=>v.id===id && v.category==='numbers')).length >= 10 },
-      { icon:'🌟', name:'ستێرەی زانست', desc:'١٠٠ XP کەسبکردت',              unlocked: appState.xp >= 100 },
-      { icon:'📖', name:'وشەزانی',       desc:'٢٠ وشەت فێربووی',              unlocked: appState.learnedVocab.length >= 20 },
-      { icon:'🏆', name:'قاچەی عەرەبی', desc:'هەموو ٢٨ پیتت فێربووی',        unlocked: appState.learnedLetters.length >= 28 },
-      { icon:'🎯', name:'تاقیکەرەوە',   desc:'٥ تاقیکردنەوەت کردووە',        unlocked: appState.quizHistory.length >= 5 },
-      { icon:'💫', name:'مەستەر',        desc:'٥٠٠ XP کەسبکردت',              unlocked: appState.xp >= 500 }
-    ];
-    container.innerHTML = achievements.map(a => `
-      <div class="achievement-item ${a.unlocked ? 'unlocked' : ''}">
+    container.innerHTML = ACHIEVEMENTS.map(a => {
+      const unlocked = (appState.unlockedAchievements||[]).includes(a.id) || a.check();
+      return `
+      <div class="achievement-item ${unlocked ? 'unlocked' : ''}">
         <span class="ai-icon">${a.icon}</span>
         <div class="ai-info">
           <div class="ai-name">${a.name}</div>
           <div class="ai-desc">${a.desc}</div>
         </div>
-        ${a.unlocked
+        ${unlocked
           ? '<span class="text-warning"><i class="bi bi-patch-check-fill"></i></span>'
           : '<span class="ai-locked"><i class="bi bi-lock-fill"></i></span>'
         }
-      </div>`).join('');
+      </div>`;
+    }).join('');
   },
 
   renderQuizHistory() {
@@ -2223,17 +2291,232 @@ const ProgressModule = {
       vocabNotes: {},
       dailyActivity: {},
       readStories: [],
+      readSentences: [],
       quizHistory: [],
       quizBestScores: {},
       quizMistakes: {},
       ttsSpeed: 1,
-      dailyChallenge: null
+      dailyChallenge: null,
+      unlockedAchievements: []
     };
     saveState(appState);
     document.getElementById('xpCount').textContent = '0';
     document.getElementById('streakCount').textContent = '0';
     this.render();
     App.showToast('هەموو پێشکەوتنەکانت سڕایەوە', 'error');
+  }
+};
+
+/* ═══════════════════════════════════════
+   SENTENCE MODULE
+═══════════════════════════════════════ */
+const SentenceModule = {
+  render() {
+    const el = document.getElementById('dailySentence');
+    if (!el) return;
+    const dayIdx = Math.floor(Date.now() / 86400000) % DAILY_SENTENCES.length;
+    const s = DAILY_SENTENCES[dayIdx];
+    const done = (appState.readSentences || []).includes(s.id);
+    el.innerHTML = `
+      <div class="ds-card">
+        <div class="ds-header">
+          <span class="ds-label"><i class="bi bi-chat-quote-fill me-1"></i>جووملەی ڕۆژانە</span>
+          ${done ? '<span class="ds-done-badge">تەواو ✔</span>' : ''}
+        </div>
+        <div class="ds-arabic">${s.arabic}</div>
+        <div class="ds-translit">[${s.transliteration}]</div>
+        <div class="ds-translation d-none" id="dsTranslation">${s.kurdish}</div>
+        <div class="ds-controls">
+          ${SpeechModule.btn(s.arabic, 'ds-speak-btn')}
+          <button class="ds-toggle-btn" onclick="SentenceModule.toggleTranslation()">
+            <i class="bi bi-eye me-1"></i>وەرگێڕان
+          </button>
+          ${!done ? `<button class="ds-mark-btn" onclick="SentenceModule.markRead(${s.id})">
+            <i class="bi bi-check-lg me-1"></i>تەواومکرد +8 XP
+          </button>` : ''}
+        </div>
+      </div>`;
+  },
+
+  toggleTranslation() {
+    const el = document.getElementById('dsTranslation');
+    if (!el) return;
+    el.classList.toggle('d-none');
+    const btn = document.querySelector('.ds-toggle-btn');
+    if (btn) btn.innerHTML = el.classList.contains('d-none')
+      ? '<i class="bi bi-eye me-1"></i>وەرگێڕان'
+      : '<i class="bi bi-eye-slash me-1"></i>شاردنەوە';
+  },
+
+  markRead(id) {
+    if (!appState.readSentences) appState.readSentences = [];
+    if (!appState.readSentences.includes(id)) {
+      appState.readSentences.push(id);
+      App.addXP(8);
+      saveState(appState);
+    }
+    this.render();
+  }
+};
+
+/* ═══════════════════════════════════════
+   VOCAB DETAIL MODULE
+═══════════════════════════════════════ */
+const VocabDetailModule = {
+  open(id) {
+    const word = VOCABULARY.find(w => w.id === id);
+    if (!word) return;
+    const cat = VOCAB_CATEGORIES[word.category];
+    const isLearned = appState.learnedVocab.includes(id);
+    const isFav = (appState.favoriteVocab || []).includes(id);
+    const note = appState.vocabNotes?.[id] || '';
+    const ov = document.getElementById('vocabDetailOverlay');
+    if (!ov) return;
+    ov.classList.remove('d-none');
+    document.getElementById('vdContent').innerHTML = `
+      <div class="vd-word">${word.arabic}</div>
+      <div class="vd-translit">[${word.transliteration}]</div>
+      <div class="vd-kurdish">${word.kurdish}</div>
+      <div class="vd-cat">${cat?.icon || ''} ${cat?.label || word.category}</div>
+      ${word.exampleSentence ? `<div class="vd-example">نموونە: <em>${word.exampleSentence}</em></div>` : ''}
+      <div class="vd-actions">
+        ${SpeechModule.btn(word.arabic, 'vd-speak-btn')}
+        <button class="vd-fav-btn ${isFav ? 'active' : ''}" onclick="VocabDetailModule.toggleFav(${id})">
+          <i class="bi bi-heart${isFav ? '-fill' : ''} me-1"></i>${isFav ? 'علاقەکمەندە' : 'بە علاقەکان زیادبکە'}
+        </button>
+        <button class="vd-learned-btn ${isLearned ? 'learned' : ''}" onclick="VocabDetailModule.toggleLearned(${id})">
+          ${isLearned ? '<i class="bi bi-check-circle-fill me-1"></i>فێربووی' : '<i class="bi bi-circle me-1"></i>فێربووم'}
+        </button>
+      </div>
+      <div class="vd-note-section">
+        <label class="vd-note-label"><i class="bi bi-pencil-square me-1"></i>تێبینی تایبەتی:</label>
+        <textarea class="vd-note-input" id="vdNoteInput" placeholder="تێبینییەکانت لێرە بنووسە…" rows="3">${note}</textarea>
+        <button class="vd-save-btn" onclick="VocabDetailModule.saveNote(${id})"><i class="bi bi-floppy me-1"></i>پاشەکەوتکردن</button>
+      </div>`;
+  },
+
+  close() {
+    const ov = document.getElementById('vocabDetailOverlay');
+    if (ov) ov.classList.add('d-none');
+  },
+
+  saveNote(id) {
+    const ta = document.getElementById('vdNoteInput');
+    if (!ta) return;
+    if (!appState.vocabNotes) appState.vocabNotes = {};
+    appState.vocabNotes[id] = ta.value.trim();
+    saveState(appState);
+    App.showToast('تێبینی پاشەکەوتکرا ✔', 'success');
+  },
+
+  toggleFav(id) {
+    if (!appState.favoriteVocab) appState.favoriteVocab = [];
+    const idx = appState.favoriteVocab.indexOf(id);
+    if (idx >= 0) appState.favoriteVocab.splice(idx, 1);
+    else appState.favoriteVocab.push(id);
+    saveState(appState);
+    this.open(id);
+  },
+
+  toggleLearned(id) {
+    VocabModule.markLearned(id);
+    this.open(id);
+  }
+};
+
+/* ═══════════════════════════════════════
+   MISTAKE DRILL MODULE
+═══════════════════════════════════════ */
+const MistakeDrillModule = {
+  _words: [], _idx: 0, _score: 0,
+
+  open() {
+    const mistakes = appState.quizMistakes || {};
+    const sorted = Object.entries(mistakes).sort((a, b) => b[1] - a[1]);
+    if (!sorted.length) { App.showToast('هیچ هەڵەت تۆمارنەکراوە — تاقیکردنەوەکان بکە!', 'info'); return; }
+    this._words = sorted
+      .map(([key]) => VOCABULARY.find(v => v.arabic === key))
+      .filter(Boolean)
+      .slice(0, 10);
+    if (!this._words.length) { App.showToast('وشەی ئامادە نییە بۆ دڕیل', 'info'); return; }
+    this._idx = 0; this._score = 0;
+    const ov = document.getElementById('mistakeDrillOverlay');
+    if (ov) { ov.classList.remove('d-none'); this._renderQ(); }
+  },
+
+  close() {
+    const ov = document.getElementById('mistakeDrillOverlay');
+    if (ov) ov.classList.add('d-none');
+    window.speechSynthesis?.cancel();
+  },
+
+  _renderQ() {
+    const el = document.getElementById('mdContent');
+    if (!el) return;
+    const w = this._words[this._idx];
+    const pool = VOCABULARY.filter(v => v.id !== w.id);
+    const opts = [w, ...pool.sort(() => Math.random() - 0.5).slice(0, 3)].sort(() => Math.random() - 0.5);
+    el.innerHTML = `
+      <div class="md-header">
+        <span class="md-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>دڕیلی هەڵەکان</span>
+        <span class="md-counter">${this._idx + 1}/${this._words.length}</span>
+      </div>
+      <div class="md-progress-bar"><div class="md-progress-inner" style="width:${this._idx / this._words.length * 100}%"></div></div>
+      <div class="md-word-display">
+        <div class="md-arabic">${w.arabic}</div>
+        ${SpeechModule.btn(w.arabic, 'md-speak-btn')}
+      </div>
+      <p class="md-question">مانای ئەم وشەیە چییە؟</p>
+      <div class="md-options">
+        ${opts.map(o => `<button class="md-opt" onclick="MistakeDrillModule.answer(${o.id}, this, ${w.id})">${o.kurdish}</button>`).join('')}
+      </div>
+      <div class="md-feedback d-none" id="mdFeedback"></div>`;
+  },
+
+  answer(selId, btn, correctId) {
+    const ok = selId === correctId;
+    if (ok) this._score++;
+    document.querySelectorAll('.md-opt').forEach(b => {
+      b.disabled = true;
+      const bid = parseInt(b.getAttribute('onclick').match(/\((\d+)/)[1]);
+      if (bid === correctId) b.classList.add('md-correct');
+    });
+    if (!ok) btn.classList.add('md-wrong');
+    SoundModule.play(ok ? 'correct' : 'wrong');
+    if (ok) {
+      const word = VOCABULARY.find(v => v.id === correctId);
+      if (word && appState.quizMistakes?.[word.arabic]) {
+        appState.quizMistakes[word.arabic] = Math.max(0, appState.quizMistakes[word.arabic] - 1);
+        if (appState.quizMistakes[word.arabic] === 0) delete appState.quizMistakes[word.arabic];
+        saveState(appState);
+      }
+    }
+    const fb = document.getElementById('mdFeedback');
+    const correct = VOCABULARY.find(v => v.id === correctId);
+    if (fb) {
+      fb.className = `md-feedback ${ok ? 'md-fb-ok' : 'md-fb-no'}`;
+      fb.textContent = ok ? `✔ ئافەرین!` : `✘ وەڵامی دروست: ${correct?.kurdish}`;
+    }
+    setTimeout(() => { this._idx++; if (this._idx < this._words.length) this._renderQ(); else this._finish(); }, ok ? 900 : 1800);
+  },
+
+  _finish() {
+    const xp = this._score * 5;
+    App.addXP(xp);
+    const el = document.getElementById('mdContent');
+    if (!el) return;
+    const pct = Math.round(this._score / this._words.length * 100);
+    el.innerHTML = `
+      <div class="text-center py-3">
+        <div style="font-size:3rem">${pct >= 80 ? '🏆' : pct >= 50 ? '⭐' : '💪'}</div>
+        <div style="font-size:2rem;font-weight:800;margin:.4rem 0">${this._score}/${this._words.length}</div>
+        <div style="color:var(--muted-text);font-size:.9rem;margin-bottom:.5rem">${pct >= 80 ? 'هەڵەکانت سازکردووەتەوە! 🎉' : 'بەردەوام بە — ئەوانەت فێربوو!'}</div>
+        <div class="nd-result-xp">+${xp} XP</div>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+          <button class="btn btn-warning" onclick="MistakeDrillModule.open()">جارێکی تر</button>
+          <button class="btn btn-outline-secondary" onclick="MistakeDrillModule.close()">داخستن</button>
+        </div>
+      </div>`;
   }
 };
 
