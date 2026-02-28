@@ -28,6 +28,7 @@ function loadState() {
     readStories: [],
     quizHistory: [],
     quizBestScores: {},
+    quizMistakes: {},
     ttsSpeed: 1,
     dailyChallenge: null
   };
@@ -336,6 +337,7 @@ const App = {
     if (!appState.quizBestScores)  { appState.quizBestScores  = {}; saveState(appState); }
     if (appState.ttsSpeed    === undefined) { appState.ttsSpeed    = 1;    saveState(appState); }
     if (appState.dailyChallenge === undefined) { appState.dailyChallenge = null; saveState(appState); }
+    if (!appState.quizMistakes)  { appState.quizMistakes  = {};   saveState(appState); }
     const xpEl = document.getElementById('xpCount');
     if (xpEl) xpEl.textContent = appState.xp;
     // restore theme
@@ -392,6 +394,7 @@ const LetterModule = {
     const grid = document.getElementById('lettersGrid');
     if (!grid) return;
     this.renderFiltered(this.currentFilter);
+    this.renderMasteryGrid();
   },
 
   filter(type, btn) {
@@ -428,6 +431,17 @@ const LetterModule = {
 
   typeLabel(type) {
     return {shamsieh:'شەمسیە', qamariyeh:'قەمەریە', 'long-vowels':'دەنگبەزیک'}[type] || type;
+  },
+
+  renderMasteryGrid() {
+    const el = document.getElementById('letterMasteryGrid');
+    if (!el) return;
+    el.innerHTML = ARABIC_LETTERS.map(l => {
+      const lrn = appState.learnedLetters.includes(l.id);
+      return `<div class="lmg-tile ${lrn ? 'lmg-learned' : ''}" title="${l.name} — ${l.kurdishName}" onclick="LetterModule.openDetail(${l.id})">${l.arabic}</div>`;
+    }).join('');
+    const cnt = document.getElementById('lmgCount');
+    if (cnt) cnt.textContent = appState.learnedLetters.length;
   },
 
   openDetail(id) {
@@ -1316,6 +1330,192 @@ const GrammarModule = {
 };
 
 /* ═══════════════════════════════════════
+   LISTEN QUIZ MODULE  (گوێدان + هەڵبژارتن)
+═══════════════════════════════════════ */
+const ListenQuizModule = {
+  _words: [], _idx: 0, _score: 0, _answered: false, _total: 10,
+
+  open() {
+    this._words = [...VOCABULARY].sort(() => Math.random() - 0.5).slice(0, this._total);
+    this._idx = 0; this._score = 0; this._answered = false;
+    const ov = document.getElementById('listenQuizOverlay');
+    if (ov) { ov.classList.remove('d-none'); this._renderQ(); }
+  },
+
+  close() {
+    const ov = document.getElementById('listenQuizOverlay');
+    if (ov) ov.classList.add('d-none');
+    window.speechSynthesis.cancel();
+  },
+
+  _renderQ() {
+    const q = this._words[this._idx];
+    this._answered = false;
+    const others = VOCABULARY.filter(w => w.id !== q.id).sort(() => Math.random() - 0.5).slice(0, 3);
+    const opts = [...others.map(w => ({text:w.kurdish, correct:false})), {text:q.kurdish, correct:true}]
+      .sort(() => Math.random() - 0.5);
+    const el = document.getElementById('lqzContent');
+    if (!el) return;
+    el.innerHTML = `
+      <div class="lqz-bar-row">
+        <div class="lqz-progress"><div class="lqz-progress-inner" style="width:${this._idx/this._total*100}%"></div></div>
+        <span class="lqz-counter">${this._idx+1}/${this._total}</span>
+      </div>
+      <div class="lqz-listen-area">
+        <button class="lqz-play-btn" id="lqzPlayBtn" onclick="ListenQuizModule.playWord()">
+          <i class="bi bi-headphones"></i><span>گوێ بگرە</span>
+        </button>
+        <div class="lqz-arabic-hint" id="lqzHint" style="opacity:0"></div>
+      </div>
+      <p class="lqz-question">مانای ئەم وشەیە بە کوردی چییە؟</p>
+      <div class="lqz-options">
+        ${opts.map(o => `<button class="lqz-opt" data-correct="${o.correct}" onclick="ListenQuizModule.answer(this, ${o.correct})">${o.text}</button>`).join('')}
+      </div>
+      <div class="lqz-feedback d-none" id="lqzFeedback"></div>`;
+    setTimeout(() => this.playWord(), 500);
+  },
+
+  playWord() {
+    const q = this._words[this._idx];
+    SpeechModule.speak(q.arabic);
+    const btn = document.getElementById('lqzPlayBtn');
+    if (btn) { btn.classList.add('lqz-playing'); setTimeout(() => btn.classList.remove('lqz-playing'), 1600); }
+  },
+
+  answer(btn, correct) {
+    if (this._answered) return;
+    this._answered = true;
+    const q = this._words[this._idx];
+    if (correct) this._score++;
+    else {
+      appState.quizMistakes = appState.quizMistakes || {};
+      appState.quizMistakes[q.arabic] = (appState.quizMistakes[q.arabic] || 0) + 1;
+      saveState(appState);
+    }
+    document.querySelectorAll('.lqz-opt').forEach(b => { b.disabled = true; if (b.dataset.correct === 'true') b.classList.add('lqz-correct'); });
+    if (!correct) btn.classList.add('lqz-wrong');
+    SoundModule.play(correct ? 'correct' : 'wrong');
+    const hint = document.getElementById('lqzHint');
+    if (hint) { hint.textContent = `${q.arabic} — [${q.transliteration}]`; hint.style.opacity = '1'; }
+    const fb = document.getElementById('lqzFeedback');
+    if (fb) { fb.className = `lqz-feedback ${correct ? 'lqz-fb-ok' : 'lqz-fb-no'}`; fb.textContent = correct ? `✔ ئافەرین! — ${q.kurdish}` : `✘ دروست: ${q.kurdish}`; }
+    setTimeout(() => { this._idx++; if (this._idx < this._total) this._renderQ(); else this._finish(); }, correct ? 1100 : 2000);
+  },
+
+  _finish() {
+    const xp = Math.round(this._score * 5);
+    App.addXP(xp);
+    const el = document.getElementById('lqzContent');
+    if (!el) return;
+    const pct = Math.round(this._score / this._total * 100);
+    el.innerHTML = `
+      <div class="lqz-result">
+        <div class="lqz-result-icon">${pct >= 80 ? '🏆' : pct >= 50 ? '⭐' : '📚'}</div>
+        <div class="lqz-result-score">${this._score}/${this._total}</div>
+        <div class="lqz-result-msg">${pct >= 80 ? 'گوێدانت سەرور باشە!' : pct >= 50 ? 'باشە — بەردەوام بە!' : 'گوێدان پڕاکتیزی زیاتر دەخوازێت!'}</div>
+        <div class="lqz-result-xp">+${xp} XP کەسبکردت</div>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+          <button class="btn btn-primary" onclick="ListenQuizModule.open()">جارێکی تر</button>
+          <button class="btn btn-outline-secondary" onclick="ListenQuizModule.close()">داخستن</button>
+        </div>
+      </div>`;
+  }
+};
+
+/* ═══════════════════════════════════════
+   MATCH GAME MODULE  (یاری دووبەرد)
+═══════════════════════════════════════ */
+const MatchGameModule = {
+  _pairs: [], _selected: null, _matched: 0, _timer: null, _startTime: 0,
+
+  open() {
+    this._pairs = [...VOCABULARY].sort(() => Math.random() - 0.5).slice(0, 5);
+    this._selected = null; this._matched = 0;
+    const ov = document.getElementById('matchGameOverlay');
+    if (ov) { ov.classList.remove('d-none'); this._render(); }
+  },
+
+  close() {
+    const ov = document.getElementById('matchGameOverlay');
+    if (ov) ov.classList.add('d-none');
+    if (this._timer) { clearInterval(this._timer); this._timer = null; }
+  },
+
+  _render() {
+    const el = document.getElementById('matchGameContent');
+    if (!el) return;
+    const tiles = [
+      ...this._pairs.map(p => ({id:p.id, text:p.arabic, arabic:true})),
+      ...this._pairs.map(p => ({id:p.id, text:p.kurdish, arabic:false}))
+    ].sort(() => Math.random() - 0.5);
+    el.innerHTML = `
+      <div class="mg-header">
+        <span class="mg-badge"><i class="bi bi-grid-3x3-gap-fill me-1"></i>یاری دووبەرد</span>
+        <span class="mg-timer-disp" id="mgTimerDisp">⏱ 0s</span>
+        <button class="mg-close-btn" onclick="MatchGameModule.close()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <p class="mg-instruction">جوتە عەرەبی+کوردییەکانیان دریابکەرەوە!</p>
+      <div class="mg-grid" id="mgGrid">
+        ${tiles.map(t => `
+          <div class="mg-tile" data-id="${t.id}" data-arabic="${t.arabic}" onclick="MatchGameModule.pick(this)">
+            <span class="${t.arabic ? 'mg-arabic-text' : 'mg-kurdish-text'}">${t.text}</span>
+          </div>`).join('')}
+      </div>
+      <div class="mg-status" id="mgStatus">0/5 جوتی دریایەوە</div>`;
+    this._startTime = Date.now();
+    if (this._timer) clearInterval(this._timer);
+    this._timer = setInterval(() => {
+      const d = document.getElementById('mgTimerDisp');
+      if (d) d.textContent = `⏱ ${Math.floor((Date.now()-this._startTime)/1000)}s`;
+    }, 1000);
+  },
+
+  pick(tile) {
+    if (tile.classList.contains('mg-done') || tile.classList.contains('mg-shake')) return;
+    if (!this._selected) {
+      this._selected = tile; tile.classList.add('mg-selected');
+      if (tile.dataset.arabic === 'true') SpeechModule.speak(tile.querySelector('.mg-arabic-text').textContent);
+    } else {
+      if (this._selected === tile) { tile.classList.remove('mg-selected'); this._selected = null; return; }
+      const match = this._selected.dataset.id === tile.dataset.id &&
+                    this._selected.dataset.arabic !== tile.dataset.arabic;
+      if (match) {
+        [this._selected, tile].forEach(t => { t.classList.remove('mg-selected'); t.classList.add('mg-done'); });
+        SoundModule.play('correct'); this._matched++;
+        const s = document.getElementById('mgStatus');
+        if (s) s.textContent = `${this._matched}/5 جوتی دریایەوە`;
+        if (this._matched === 5) setTimeout(() => this._finish(), 400);
+      } else {
+        const prev = this._selected;
+        [prev, tile].forEach(t => t.classList.add('mg-shake'));
+        SoundModule.play('wrong');
+        setTimeout(() => { [prev, tile].forEach(t => { t.classList.remove('mg-selected','mg-shake'); }); }, 650);
+      }
+      this._selected = null;
+    }
+  },
+
+  _finish() {
+    clearInterval(this._timer); this._timer = null;
+    const secs = Math.floor((Date.now()-this._startTime)/1000);
+    App.addXP(25);
+    const el = document.getElementById('matchGameContent');
+    if (!el) return;
+    el.innerHTML = `
+      <div class="mg-result">
+        <div class="mg-result-icon">🎉</div>
+        <div class="mg-result-title">هەموو جوتەکانت دریاند!</div>
+        <div class="mg-result-time">⏱ ${secs} چرکە</div>
+        <div class="mg-result-xp">+25 XP</div>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+          <button class="btn btn-primary" onclick="MatchGameModule.open()">جارێکی تر</button>
+          <button class="btn btn-outline-secondary" onclick="MatchGameModule.close()">داخستن</button>
+        </div>
+      </div>`;
+  }
+};
+
+/* ═══════════════════════════════════════
    LETTER SEARCH
 ═══════════════════════════════════════ */
 LetterModule.search = function(query) {
@@ -1614,8 +1814,12 @@ const QuizModule = {
       if (q.options[i] === q.correctAnswer) b.classList.add('correct');
     });
 
-    if (!isCorrect) btn.classList.add('wrong');
-    else { this.score += 10; this.correctCount++; }
+    if (!isCorrect) {
+      btn.classList.add('wrong');
+      // Track mistake
+      const key = q.arabicText || q.question;
+      if (key) { appState.quizMistakes = appState.quizMistakes || {}; appState.quizMistakes[key] = (appState.quizMistakes[key] || 0) + 1; saveState(appState); }
+    } else { this.score += 10; this.correctCount++; }
 
     SoundModule.play(isCorrect ? 'correct' : 'wrong');
 
@@ -1734,6 +1938,7 @@ const ProgressModule = {
     this.renderAchievements();
     this.renderQuizHistory();
     this.renderActivityHeatmap();
+    this.renderWeakSpots();
   },
 
   copyProgress() {
@@ -1910,6 +2115,36 @@ const ProgressModule = {
     </div>`;
   },
 
+  renderWeakSpots() {
+    const el = document.getElementById('weakSpots');
+    if (!el) return;
+    const mistakes = appState.quizMistakes || {};
+    const sorted = Object.entries(mistakes).sort((a,b) => b[1]-a[1]).slice(0, 6);
+    if (!sorted.length) {
+      el.innerHTML = `<p class="text-center py-3" style="color:var(--muted-text);font-size:.85rem"><i class="bi bi-patch-check-fill text-success me-2"></i>هێشتا هیچ هەڵەی تۆمارکراوت نییە — تاقیکردنەوە بکە!</p>`;
+      return;
+    }
+    const maxCount = sorted[0][1];
+    el.innerHTML = sorted.map(([key, count]) => {
+      const word = VOCABULARY.find(v => v.arabic === key);
+      const label = key;
+      const meaning = word ? word.kurdish : '';
+      const pct = Math.round(count / maxCount * 100);
+      return `
+        <div class="ws-item">
+          <div class="ws-info">
+            <span class="ws-arabic">${label}</span>
+            ${meaning ? `<span class="ws-kurdish">${meaning}</span>` : ''}
+          </div>
+          <div class="ws-bar-wrap">
+            <div class="ws-bar-fill" style="width:${pct}%;background:${count >= 4 ? '#ef4444' : count >= 2 ? '#f59e0b' : '#6366f1'}"></div>
+          </div>
+          <span class="ws-count">${count}x</span>
+          <button class="ws-speak" onclick="SpeechModule.speak('${label.replace(/'/g,"\\'")}')"><i class="bi bi-volume-up-fill"></i></button>
+        </div>`;
+    }).join('');
+  },
+
   reset() {
     if (!confirm('دڵنیای لە سڕینەوەی هەموو پێشکەوتنت؟')) return;
     appState = {
@@ -1926,6 +2161,7 @@ const ProgressModule = {
       readStories: [],
       quizHistory: [],
       quizBestScores: {},
+      quizMistakes: {},
       ttsSpeed: 1,
       dailyChallenge: null
     };

@@ -283,6 +283,15 @@
         </div>
       </div>
 
+      <!-- Letter Mastery Mini-Map -->
+      <div class="letter-mastery-wrap mb-4" id="letterMasteryWrap">
+        <div class="lmg-header">
+          <span><i class="bi bi-grid-3x3 me-1"></i>نەخشەی دەستکەوت لە پیتەکان</span>
+          <span class="lmg-learned-count"><span id="lmgCount">0</span>/28</span>
+        </div>
+        <div id="letterMasteryGrid" class="lmg-grid"></div>
+      </div>
+
       <!-- Filter Tabs -->
       <div class="filter-tabs mb-3 d-flex flex-wrap align-items-center gap-2" id="letterFilterTabs">
         <button class="filter-btn active" data-filter="all" onclick="LetterModule.filter('all',this)">هەموو</button>
@@ -362,10 +371,16 @@
         />
       </div>
 
-      <!-- Flashcard + Export Buttons -->
+      <!-- Flashcard + Export + Games -->
       <div class="d-flex justify-content-end gap-2 mb-3 flex-wrap">
         <button class="btn btn-outline-success btn-sm px-3" onclick="VocabModule.exportLearned()" style="border-radius:12px;font-size:.82rem">
           <i class="bi bi-download me-1"></i>هاوردەکردنی وشەکان
+        </button>
+        <button class="game-launch-btn" onclick="ListenQuizModule.open()">
+          <i class="bi bi-headphones me-1"></i>گوێدان
+        </button>
+        <button class="game-launch-btn game-match-btn" onclick="MatchGameModule.open()">
+          <i class="bi bi-grid-3x3-gap-fill me-1"></i>یاری دووبەرد
         </button>
         <button class="flashcard-launch-btn" onclick="FlashcardModule.open()">
           <i class="bi bi-stack me-2"></i>دۆخی فلاشکارد
@@ -557,6 +572,16 @@
         </div>
       </div>
 
+      <!-- Weak Spots -->
+      <div class="row g-4 mt-1">
+        <div class="col-12">
+          <div class="progress-detail-card">
+            <h5><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>شوێنە لاوازەکان — چەند هەڕەی زیاتر</h5>
+            <div id="weakSpots"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Reset Button -->
       <div class="text-center mt-4 d-flex justify-content-center gap-3 flex-wrap">
         <button class="btn btn-outline-info" onclick="ProgressModule.copyProgress()">
@@ -627,6 +652,24 @@
     </div>
     <!-- Key hint -->
     <div class="fc-key-hint"><i class="bi bi-keyboard me-1"></i>Space=بچەرخێنە &nbsp; ←=دواتر &nbsp; →=پێشتر &nbsp; Enter=فێربووم &nbsp; Esc=داخستن</div>
+  </div>
+</div>
+
+<!-- ===== LISTEN QUIZ OVERLAY ===== -->
+<div id="listenQuizOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)ListenQuizModule.close()">
+  <div class="lqz-box">
+    <div class="lqz-box-header">
+      <span class="lqz-box-title"><i class="bi bi-headphones me-2"></i>گوێدان + هەڵبژارتن</span>
+      <button class="fc-close-btn" onclick="ListenQuizModule.close()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="lqzContent" class="lqz-content"></div>
+  </div>
+</div>
+
+<!-- ===== MATCH GAME OVERLAY ===== -->
+<div id="matchGameOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)MatchGameModule.close()">
+  <div class="lqz-box">
+    <div id="matchGameContent" class="lqz-content"></div>
   </div>
 </div>
 
