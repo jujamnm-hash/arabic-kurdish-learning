@@ -230,7 +230,7 @@
     </div>
 
     <!-- Word of Day + Daily Goals -->
-    <div class="container pb-5">
+    <div class="container pb-4">
       <div class="row g-4">
         <div class="col-md-6">
           <div class="wod-card">
@@ -247,6 +247,23 @@
             </div>
             <div id="dailyGoals" class="goals-body"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Challenge -->
+    <div class="container pb-4">
+      <div id="dailyChallenge"></div>
+    </div>
+
+    <!-- TTS Speed Control -->
+    <div class="container pb-5">
+      <div class="tts-speed-row">
+        <span class="tts-speed-label"><i class="bi bi-volume-up-fill me-1"></i>خێرایی دەنگ:</span>
+        <div class="tts-speed-btns">
+          <button class="tts-speed-btn" onclick="SpeechModule.setSpeed(0)" id="speedBtn0">🐢 بەئاهەنگ</button>
+          <button class="tts-speed-btn active" onclick="SpeechModule.setSpeed(1)" id="speedBtn1">▶ ئاسایی</button>
+          <button class="tts-speed-btn" onclick="SpeechModule.setSpeed(2)" id="speedBtn2">⚡ خێرا</button>
         </div>
       </div>
     </div>
@@ -275,6 +292,9 @@
         <button class="letter-quiz-launch-btn" onclick="LetterQuizModule.start()">
           <i class="bi bi-lightning-fill me-1"></i>تاقیکردنەوەی پیتەکان
         </button>
+        <button class="grammar-tip-btn" onclick="GrammarModule.show()" data-bs-toggle="modal" data-bs-target="#grammarModal">
+          <i class="bi bi-book-fill me-1"></i>ڕێساکانی دەستور
+        </button>
       </div>
 
       <!-- Letter Search -->
@@ -285,6 +305,21 @@
 
       <!-- Letters Grid -->
       <div class="row g-3" id="lettersGrid"></div>
+
+      <!-- Grammar Tips Modal -->
+      <div class="modal fade" id="grammarModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content grammar-modal-content">
+            <div class="modal-header grammar-modal-header border-0">
+              <h5 class="modal-title">
+                <i class="bi bi-book-fill me-2"></i>ڕێساکانی دەستوری عەرەبی
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="grammarModalBody"></div>
+          </div>
+        </div>
+      </div>
 
       <!-- Letter Detail Modal -->
       <div class="modal fade" id="letterModal" tabindex="-1">

@@ -27,7 +27,9 @@ function loadState() {
     dailyActivity: {},
     readStories: [],
     quizHistory: [],
-    quizBestScores: {}
+    quizBestScores: {},
+    ttsSpeed: 1,
+    dailyChallenge: null
   };
 }
 
@@ -48,10 +50,19 @@ const SpeechModule = {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang;
-    u.rate = 0.78;
+    const speeds = [0.55, 0.78, 1.1];
+    u.rate  = speeds[appState?.ttsSpeed ?? 1];
     u.pitch = 1.05;
     u.volume = 1;
     window.speechSynthesis.speak(u);
+  },
+
+  setSpeed(n) {
+    appState.ttsSpeed = n;
+    saveState(appState);
+    const labels = ['بەئاهەنگ', 'ئاسایی', 'خێرا'];
+    App.showToast(`خێرایی دەنگ: ${labels[n]} 🔊`, 'info');
+    document.querySelectorAll('.tts-speed-btn').forEach((b, i) => b.classList.toggle('active', i === n));
   },
 
   btn(text, extraClass = '') {
@@ -176,6 +187,10 @@ const App = {
     }
     this.renderWordOfDay();
     this.renderDailyGoals();
+    DailyChallengeModule.render();
+    // Sync TTS speed buttons
+    const spd = appState.ttsSpeed ?? 1;
+    document.querySelectorAll('.tts-speed-btn').forEach((b, i) => b.classList.toggle('active', i === spd));
   },
 
   renderWordOfDay() {
@@ -319,6 +334,8 @@ const App = {
     if (!appState.vocabNotes)      { appState.vocabNotes      = {}; saveState(appState); }
     if (!appState.dailyActivity)   { appState.dailyActivity   = {}; saveState(appState); }
     if (!appState.quizBestScores)  { appState.quizBestScores  = {}; saveState(appState); }
+    if (appState.ttsSpeed    === undefined) { appState.ttsSpeed    = 1;    saveState(appState); }
+    if (appState.dailyChallenge === undefined) { appState.dailyChallenge = null; saveState(appState); }
     const xpEl = document.getElementById('xpCount');
     if (xpEl) xpEl.textContent = appState.xp;
     // restore theme
@@ -516,7 +533,19 @@ const VocabModule = {
     const reviewBtn = dueCount > 0 ? `<button class="vocab-cat-btn review-btn ${this.currentCategory === 'review' ? 'active' : ''}" onclick="VocabModule.filterByCategory('review', this)">🔄 دووبارەکردنەوە <span class="fav-count-badge" style="background:#f59e0b">${dueCount}</span></button>` : '';
     const favBtn    = `<button class="vocab-cat-btn fav-btn ${this.currentCategory === 'favorites' ? 'active' : ''}" onclick="VocabModule.filterByCategory('favorites', this)">❤️ مورد علاقە${favCount ? ` <span class="fav-count-badge">${favCount}</span>` : ''}</button>`;
 
-    container.innerHTML = allBtn + catBtns + reviewBtn + favBtn;
+    // Build progress summary
+    const progBars = Object.entries(VOCAB_CATEGORIES).map(([key, val]) => {
+      const total   = VOCABULARY.filter(w => w.category === key).length;
+      const learned = VOCABULARY.filter(w => w.category === key && appState.learnedVocab.includes(w.id)).length;
+      const pct = total ? Math.round(learned / total * 100) : 0;
+      return `<div class="vcp-item" onclick="VocabModule.filterByCategory('${key}',null)">
+        <div class="vcp-top"><span>${val.icon} ${val.label}</span><span class="vcp-nums">${learned}/${total}</span></div>
+        <div class="vcp-bar-bg"><div class="vcp-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML = allBtn + catBtns + reviewBtn + favBtn
+      + `<div class="vocab-cat-progress" id="vcpRow">${progBars}</div>`;
   },
 
   filterByCategory(cat, btn) {
@@ -1112,6 +1141,177 @@ const GlobalSearch = {
         </div>
         <i class="bi bi-arrow-left gs-item-arrow"></i>
       </div>`).join('');
+  }
+};
+
+/* ═══════════════════════════════════════
+   DAILY CHALLENGE MODULE
+═══════════════════════════════════════ */
+const DailyChallengeModule = {
+  _questions: [],
+  _idx: 0,
+  _score: 0,
+  _answered: false,
+
+  _todayKey() { return new Date().toISOString().split('T')[0]; },
+
+  _buildQuestions() {
+    const seed = Math.floor(Date.now() / 86400000);
+    const pool = [...QUIZ_QUESTIONS].sort((a, b) => {
+      let h = seed;
+      const sh = s => { for (let i = 0; i < s.length; i++) { h = Math.imul(31, h) + s.charCodeAt(i) | 0; } return h; };
+      return sh(a.question) - sh(b.question);
+    });
+    return pool.slice(0, 3);
+  },
+
+  render() {
+    const el = document.getElementById('dailyChallenge');
+    if (!el) return;
+    const today = this._todayKey();
+    const dc = appState.dailyChallenge;
+    if (dc && dc.date === today && dc.done) {
+      el.innerHTML = `
+        <div class="dc-card dc-done">
+          <div class="dc-done-icon">🏅</div>
+          <div>
+            <div class="dc-done-title">چالەنجی ئەمرۆ تەواو کردت!</div>
+            <div class="dc-done-sub">${dc.score}/3 وەڵامی دروست — +${dc.earnedXP} XP</div>
+          </div>
+          <div class="dc-done-check"><i class="bi bi-check-circle-fill"></i></div>
+        </div>`;
+      return;
+    }
+    this._questions = this._buildQuestions();
+    this._idx = 0; this._score = 0; this._answered = false;
+    this._renderQuestion();
+  },
+
+  _renderQuestion() {
+    const el = document.getElementById('dailyChallenge');
+    if (!el) return;
+    if (this._idx >= this._questions.length) { this._finish(); return; }
+    const q = this._questions[this._idx];
+    this._answered = false;
+    el.innerHTML = `
+      <div class="dc-card">
+        <div class="dc-header">
+          <span class="dc-badge"><i class="bi bi-lightning-charge-fill me-1"></i>چالەنجی ڕۆژانە</span>
+          <span class="dc-counter">${this._idx + 1}/3</span>
+        </div>
+        <div class="dc-question">${q.question}</div>
+        ${q.arabicText ? `<div class="dc-arabic">${q.arabicText}</div>` : ''}
+        <div class="dc-options">
+          ${q.options.map((opt, i) => `<button class="dc-opt" onclick="DailyChallengeModule.answer(${i}, this)">${opt}</button>`).join('')}
+        </div>
+        <div class="dc-feedback d-none" id="dcFeedback"></div>
+      </div>`;
+    if (q.arabicText) setTimeout(() => SpeechModule.speak(q.arabicText), 400);
+  },
+
+  answer(idx, btn) {
+    if (this._answered) return;
+    this._answered = true;
+    const q = this._questions[this._idx];
+    const correct = q.options[idx] === q.correctAnswer;
+    document.querySelectorAll('.dc-opt').forEach((b, i) => {
+      b.disabled = true;
+      if (q.options[i] === q.correctAnswer) b.classList.add('dc-correct');
+    });
+    if (!correct) btn.classList.add('dc-wrong');
+    else this._score++;
+    SoundModule.play(correct ? 'correct' : 'wrong');
+    const fb = document.getElementById('dcFeedback');
+    fb.className = `dc-feedback ${correct ? 'dc-fb-ok' : 'dc-fb-no'}`;
+    fb.textContent = correct ? `✔ دروستە! — ${q.explanation}` : `✘ وەڵامی دروست: ${q.correctAnswer}`;
+    setTimeout(() => { this._idx++; this._renderQuestion(); }, correct ? 1200 : 2000);
+  },
+
+  _finish() {
+    const today = this._todayKey();
+    const xp = [10, 20, 35][this._score] || 10;
+    appState.dailyChallenge = { date: today, done: true, score: this._score, earnedXP: xp };
+    saveState(appState);
+    App.addXP(xp);
+    const el = document.getElementById('dailyChallenge');
+    if (!el) return;
+    const stars = ['⭐','⭐⭐','⭐⭐⭐'][this._score] || '⭐';
+    el.innerHTML = `
+      <div class="dc-card dc-done dc-finish-anim">
+        <div class="dc-done-icon">${this._score === 3 ? '🏆' : this._score >= 2 ? '🥈' : '🥉'}</div>
+        <div>
+          <div class="dc-done-title">${stars} ${this._score}/3 وەڵامی دروست!</div>
+          <div class="dc-done-sub">+${xp} XP کەسبکردت — سبەی دووبارە وێنەبێت!</div>
+        </div>
+        <div class="dc-done-check" style="color:#f59e0b"><i class="bi bi-star-fill"></i></div>
+      </div>`;
+  }
+};
+
+/* ═══════════════════════════════════════
+   GRAMMAR MODULE
+═══════════════════════════════════════ */
+const GrammarModule = {
+  rules: [
+    {
+      icon: '☀️🌙', title: 'شەمسیە و قەمەریە',
+      body: `کاتێک <strong>ئەڵ (ال)</strong> پێش پیتی شەمسیە دەهێنرێت، <em>ل</em> بووە دەنگی ئەو پیتە. بۆ نموونە: <span class="gram-ar">الشَّمْس</span> (خۆر) = ئەش-شەمس.<br>کاتێک پێش پیتی قەمەریە دێت، <em>ل</em>ی خۆی دەندێت: <span class="gram-ar">الْقَمَر</span> (مانگ) = ئەل-قەمەر.`
+    },
+    {
+      icon: '♂️♀️', title: 'نێر و مێ (مذکر و مؤنث)',
+      body: `زۆرینەی ناوە مێیەکان بە <strong>ة (تا مربوطە)</strong> کۆتایی دێن.<br>نموونە: <span class="gram-ar">مُعَلِّم</span> (مامۆستای نێر) ← <span class="gram-ar">مُعَلِّمَة</span> (مامۆستای مێ).<br>چەند ناوێکیش بەبێ ة مێن: <span class="gram-ar">أُمّ، أُخْت</span> (دایک، خوشک).`
+    },
+    {
+      icon: '1️⃣2️⃣', title: 'ژمارەی کرداری (جمع)',
+      body: `عەرەبی سێ جۆر ژمارە هەیە: <strong>تاک (مفرد)</strong>، <strong>دووی (مثنی)</strong>، <strong>زۆر (جمع)</strong>.<br>دووی: <span class="gram-ar">كِتَاب</span> ← <span class="gram-ar">كِتَابـَان</span> (دوو کتێب).<br>زۆری ناسراو: <span class="gram-ar">كُتُب</span> — پێویستی بە ئەزبەرکردن هەیە.`
+    },
+    {
+      icon: '🔤', title: 'حەرفەکانی کێشەدان (حروف الجر)',
+      body: `حەرفە گرەکانی سەرەکی:<br>
+        <span class="gram-ar">في</span> = لە (ناوەوە) &nbsp;
+        <span class="gram-ar">من</span> = لە (لەژووردا) &nbsp;
+        <span class="gram-ar">إلى</span> = بۆ &nbsp;
+        <span class="gram-ar">على</span> = سەر &nbsp;
+        <span class="gram-ar">مع</span> = لەگەڵ &nbsp;
+        <span class="gram-ar">عن</span> = دەربارەی`
+    },
+    {
+      icon: '⏰', title: 'کاتی ئێستا و ئایندە (المضارع)',
+      body: `کردار لە کاتی ئێستا/ئایندەدا پێشگری دەگرێت: <strong>أَ/تَ/يَ/نَ</strong>.<br>
+        <span class="gram-ar">كَتَبَ</span> (نووسی) ← <span class="gram-ar">يَكْتُبُ</span> (دەنووسێت).<br>
+        نمووەکانی سەرەکی:<br>
+        <span class="gram-ar">يَذْهَبُ</span> دەچێت &nbsp; <span class="gram-ar">يَأْكُلُ</span> دەخوات &nbsp; <span class="gram-ar">يَقُولُ</span> دەڵێت`
+    },
+    {
+      icon: '🔤', title: 'وانەی نکرە و مەعرفە',
+      body: `<strong>نکرە</strong> (نەناسراو) = بەبێ ئەڵ: <span class="gram-ar">بَيْت</span> (خانوویەک).<br>
+        <strong>مەعرفە</strong> (ناسراو) = لەگەڵ ئەڵ: <span class="gram-ar">البَيْت</span> (ئەو خانووەی).<br>
+        تانوین (ـٌ ـً ـٍ) نیشانەی نکرەیە: <span class="gram-ar">كِتَابٌ</span> = کتێبێک.`
+    }
+  ],
+
+  show() {
+    const body = document.getElementById('grammarModalBody');
+    if (!body) return;
+    body.innerHTML = this.rules.map((r, i) => `
+      <div class="gram-rule">
+        <div class="gram-rule-header" onclick="GrammarModule.toggle(${i})">
+          <span class="gram-rule-icon">${r.icon}</span>
+          <span class="gram-rule-title">${r.title}</span>
+          <i class="bi bi-chevron-down gram-chevron" id="gram-chev-${i}"></i>
+        </div>
+        <div class="gram-rule-body" id="gram-body-${i}">${r.body}</div>
+      </div>`).join('');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('grammarModal')).show();
+  },
+
+  toggle(i) {
+    const b = document.getElementById(`gram-body-${i}`);
+    const c = document.getElementById(`gram-chev-${i}`);
+    if (!b) return;
+    const open = b.style.display !== 'none';
+    b.style.display = open ? 'none' : '';
+    if (c) c.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
   }
 };
 
@@ -1725,7 +1925,9 @@ const ProgressModule = {
       dailyActivity: {},
       readStories: [],
       quizHistory: [],
-      quizBestScores: {}
+      quizBestScores: {},
+      ttsSpeed: 1,
+      dailyChallenge: null
     };
     saveState(appState);
     document.getElementById('xpCount').textContent = '0';
