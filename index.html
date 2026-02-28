@@ -256,6 +256,11 @@
       <div id="dailyChallenge"></div>
     </div>
 
+    <!-- What's Next -->
+    <div class="container pb-4">
+      <div id="whatsNext"></div>
+    </div>
+
     <!-- TTS Speed Control -->
     <div class="container pb-5">
       <div class="tts-speed-row">
@@ -303,6 +308,9 @@
         </button>
         <button class="grammar-tip-btn" onclick="GrammarModule.show()" data-bs-toggle="modal" data-bs-target="#grammarModal">
           <i class="bi bi-book-fill me-1"></i>ڕێساکانی دەستور
+        </button>
+        <button class="nd-launch-btn" onclick="NumberDrillModule.open()">
+          <i class="bi bi-123 me-1"></i>دڕیلی ژمارەکان
         </button>
       </div>
 
@@ -378,6 +386,9 @@
         </button>
         <button class="game-launch-btn" onclick="ListenQuizModule.open()">
           <i class="bi bi-headphones me-1"></i>گوێدان
+        </button>
+        <button class="game-launch-btn" onclick="TypingPracticeModule.open()">
+          <i class="bi bi-keyboard me-1"></i>نووسین
         </button>
         <button class="game-launch-btn game-match-btn" onclick="MatchGameModule.open()">
           <i class="bi bi-grid-3x3-gap-fill me-1"></i>یاری دووبەرد
@@ -670,6 +681,24 @@
 <div id="matchGameOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)MatchGameModule.close()">
   <div class="lqz-box">
     <div id="matchGameContent" class="lqz-content"></div>
+  </div>
+</div>
+
+<!-- ===== TYPING PRACTICE OVERLAY ===== -->
+<div id="typingPracticeOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)TypingPracticeModule.close()">
+  <div class="lqz-box">
+    <div class="lqz-box-header">
+      <span class="lqz-box-title"><i class="bi bi-keyboard me-2"></i>پراکتیزی نووسین</span>
+      <button class="fc-close-btn" onclick="TypingPracticeModule.close()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="tpContent" class="lqz-content"></div>
+  </div>
+</div>
+
+<!-- ===== NUMBER DRILL OVERLAY ===== -->
+<div id="numberDrillOverlay" class="lqz-overlay d-none" onclick="if(event.target===this)NumberDrillModule.close()">
+  <div class="lqz-box">
+    <div id="ndContent" class="lqz-content"></div>
   </div>
 </div>
 

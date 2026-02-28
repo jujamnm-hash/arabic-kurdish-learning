@@ -189,6 +189,7 @@ const App = {
     this.renderWordOfDay();
     this.renderDailyGoals();
     DailyChallengeModule.render();
+    this.renderWhatsNext();
     // Sync TTS speed buttons
     const spd = appState.ttsSpeed ?? 1;
     document.querySelectorAll('.tts-speed-btn').forEach((b, i) => b.classList.toggle('active', i === spd));
@@ -249,6 +250,61 @@ const App = {
         <div class="goal-bar"><div class="goal-fill" style="width:${(sDone/storyGoal)*100}%"></div></div>
       </div>
       <div class="week-dots-row">${weekDots}</div>`;
+  },
+
+  renderWhatsNext() {
+    const el = document.getElementById('whatsNext');
+    if (!el) return;
+    const now = Date.now(), reviewDelay = 12 * 3600 * 1000;
+    const nextLetter = ARABIC_LETTERS.find(l => !appState.learnedLetters.includes(l.id));
+    const dueCount = VOCABULARY.filter(w =>
+      appState.learnedVocab.includes(w.id) &&
+      (!appState.vocabLastSeen?.[w.id] || now - appState.vocabLastSeen[w.id] > reviewDelay)
+    ).length;
+    const nextVocab = VOCABULARY.find(w => !appState.learnedVocab.includes(w.id));
+    const nextStory = STORIES.find(s => !appState.readStories.includes(s.id));
+    const items = [];
+    if (nextLetter) items.push(`
+      <div class="wn-card" onclick="App.navigate('letters')">
+        <div class="wn-icon" style="background:rgba(99,102,241,.15)"><span style="font-family:'Noto Naskh Arabic';font-size:1.6rem;color:#a78bfa">${nextLetter.arabic}</span></div>
+        <div class="wn-info">
+          <div class="wn-label">پیتی دواتر فێربوو</div>
+          <div class="wn-value">${nextLetter.kurdishName} — ${nextLetter.name}</div>
+        </div>
+        <i class="bi bi-arrow-left-circle wn-arrow"></i>
+      </div>`);
+    if (dueCount > 0) items.push(`
+      <div class="wn-card" onclick="VocabModule.filterByCategory('review',null);App.navigate('vocab')">
+        <div class="wn-icon" style="background:rgba(245,158,11,.15)"><i class="bi bi-arrow-repeat" style="color:#fbbf24;font-size:1.5rem"></i></div>
+        <div class="wn-info">
+          <div class="wn-label">دووبارەکردنەوە</div>
+          <div class="wn-value">${dueCount} وشە چاوەڕوانی دووبارەکردنەوەی</div>
+        </div>
+        <i class="bi bi-arrow-left-circle wn-arrow"></i>
+      </div>`);
+    else if (nextVocab) items.push(`
+      <div class="wn-card" onclick="App.navigate('vocab')">
+        <div class="wn-icon" style="background:rgba(16,185,129,.12)"><span style="font-family:'Noto Naskh Arabic';font-size:1.4rem;color:#34d399">${nextVocab.arabic}</span></div>
+        <div class="wn-info">
+          <div class="wn-label">وشەی دواتر فێربوو</div>
+          <div class="wn-value">${nextVocab.kurdish} [${nextVocab.transliteration}]</div>
+        </div>
+        <i class="bi bi-arrow-left-circle wn-arrow"></i>
+      </div>`);
+    if (nextStory) items.push(`
+      <div class="wn-card" onclick="App.navigate('stories')">
+        <div class="wn-icon" style="background:rgba(239,68,68,.1)"><i class="bi bi-book-half" style="color:#f87171;font-size:1.4rem"></i></div>
+        <div class="wn-info">
+          <div class="wn-label">چیرۆکی دواتر بخوێنەوە</div>
+          <div class="wn-value">${nextStory.title}</div>
+        </div>
+        <i class="bi bi-arrow-left-circle wn-arrow"></i>
+      </div>`);
+    if (!items.length) {
+      el.innerHTML = `<div class="wn-complete"><i class="bi bi-patch-check-fill text-success me-2"></i>ئافەرین! هەموو ئامانجەکانت تەواو کردووین 🎉</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="wn-header"><i class="bi bi-compass me-2"></i>بەردەوام بە لە فێربوون</div><div class="wn-items">${items.join('')}</div>`;
   },
 
   showToast(msg, type = 'info') {
@@ -558,7 +614,10 @@ const VocabModule = {
       </div>`;
     }).join('');
 
-    container.innerHTML = allBtn + catBtns + reviewBtn + favBtn
+    const recentCount = appState.learnedVocab.length;
+    const recentBtn = recentCount > 0 ? `<button class="vocab-cat-btn recent-btn ${this.currentCategory === 'recent' ? 'active' : ''}" onclick="VocabModule.filterByCategory('recent', this)">🕐 تازەفێربووی <span class="cat-count-badge">${Math.min(recentCount, 10)}</span></button>` : '';
+
+    container.innerHTML = allBtn + catBtns + recentBtn + reviewBtn + favBtn
       + `<div class="vocab-cat-progress" id="vcpRow">${progBars}</div>`;
   },
 
@@ -603,6 +662,11 @@ const VocabModule = {
       );
     } else if (this.currentCategory === 'favorites') {
       words = words.filter(w => favs.includes(w.id));
+    } else if (this.currentCategory === 'recent') {
+      words = words.filter(w => appState.learnedVocab.includes(w.id));
+      words = [...words].sort((a, b) =>
+        (appState.vocabLastSeen?.[b.id] || 0) - (appState.vocabLastSeen?.[a.id] || 0)
+      ).slice(0, 10);
     } else if (this.currentCategory !== 'all') {
       words = words.filter(w => w.category === this.currentCategory);
     }
@@ -2170,6 +2234,185 @@ const ProgressModule = {
     document.getElementById('streakCount').textContent = '0';
     this.render();
     App.showToast('هەموو پێشکەوتنەکانت سڕایەوە', 'error');
+  }
+};
+
+/* ═══════════════════════════════════════
+   TYPING PRACTICE MODULE
+═══════════════════════════════════════ */
+const TypingPracticeModule = {
+  _words: [], _idx: 0, _score: 0, _total: 8,
+
+  open() {
+    this._words = [...VOCABULARY].sort(() => Math.random() - 0.5).slice(0, this._total);
+    this._idx = 0; this._score = 0;
+    const ov = document.getElementById('typingPracticeOverlay');
+    if (ov) { ov.classList.remove('d-none'); this._renderQ(); }
+  },
+
+  close() {
+    const ov = document.getElementById('typingPracticeOverlay');
+    if (ov) ov.classList.add('d-none');
+    window.speechSynthesis.cancel();
+  },
+
+  _norm(s) { return s.toLowerCase().trim().replace(/[\s\u200c\u200d\-_]/g, ''); },
+
+  _renderQ() {
+    const q = this._words[this._idx];
+    const el = document.getElementById('tpContent');
+    if (!el) return;
+    const aEsc = q.arabic.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    el.innerHTML = `
+      <div class="tp-bar-row">
+        <div class="tp-progress"><div class="tp-progress-inner" style="width:${this._idx/this._total*100}%"></div></div>
+        <span class="tp-counter">${this._idx+1}/${this._total}</span>
+      </div>
+      <div class="tp-word-display">
+        <div class="tp-arabic-word">${q.arabic}</div>
+        <button class="tp-play-btn" onclick="SpeechModule.speak('${aEsc}')"><i class="bi bi-volume-up-fill"></i></button>
+      </div>
+      <div class="tp-translit">[${q.transliteration}]</div>
+      <p class="tp-instruction">مانای کوردیی ئەم وشەیە بنووسە:</p>
+      <div class="tp-input-group">
+        <input type="text" id="tpInput" class="tp-input" placeholder="وەڵامت بنووسە..."
+          autocomplete="off" autocorrect="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter')TypingPracticeModule.submit()" />
+        <button class="tp-submit-btn" onclick="TypingPracticeModule.submit()"><i class="bi bi-check-lg"></i></button>
+      </div>
+      <div class="tp-feedback d-none" id="tpFeedback"></div>
+      <button class="btn btn-link text-muted mt-1" style="font-size:.78rem" onclick="TypingPracticeModule.skip()">تێپەڕاندن →</button>`;
+    setTimeout(() => { const i = document.getElementById('tpInput'); if(i) i.focus(); SpeechModule.speak(q.arabic); }, 350);
+  },
+
+  submit() {
+    const inp = document.getElementById('tpInput');
+    if (!inp || !inp.value.trim()) return;
+    const q = this._words[this._idx];
+    const input = this._norm(inp.value);
+    const correct = this._norm(q.kurdish);
+    const translit = this._norm(q.transliteration);
+    const ok = input === correct
+      || (correct.includes(input) && input.length >= 2)
+      || input.includes(correct)
+      || input === translit
+      || (translit.includes(input) && input.length >= 3);
+    if (ok) this._score++;
+    else {
+      appState.quizMistakes = appState.quizMistakes || {};
+      appState.quizMistakes[q.arabic] = (appState.quizMistakes[q.arabic] || 0) + 1;
+      saveState(appState);
+    }
+    inp.disabled = true;
+    const sb = document.querySelector('.tp-submit-btn'); if (sb) sb.disabled = true;
+    SoundModule.play(ok ? 'correct' : 'wrong');
+    const fb = document.getElementById('tpFeedback');
+    if (fb) {
+      fb.className = `tp-feedback ${ok ? 'tp-fb-ok' : 'tp-fb-no'}`;
+      fb.innerHTML = ok
+        ? `✔ ئافەرین! <strong>${q.kurdish}</strong>`
+        : `✘ وەڵامی دروست: <strong>${q.kurdish}</strong> [${q.transliteration}]`;
+    }
+    setTimeout(() => { this._idx++; if (this._idx < this._total) this._renderQ(); else this._finish(); }, ok ? 1000 : 2300);
+  },
+
+  skip() { this._idx++; if (this._idx < this._total) this._renderQ(); else this._finish(); },
+
+  _finish() {
+    const xp = this._score * 6;
+    App.addXP(xp);
+    const el = document.getElementById('tpContent');
+    if (!el) return;
+    const pct = Math.round(this._score / this._total * 100);
+    el.innerHTML = `
+      <div class="tp-result">
+        <div class="tp-result-icon">${pct >= 75 ? '🏆' : pct >= 50 ? '⭐' : '📚'}</div>
+        <div class="tp-result-score">${this._score}/${this._total}</div>
+        <div class="tp-result-msg">${pct >= 75 ? 'نووسینت زۆر باشە!' : pct >= 50 ? 'باشە! بەردەوام بە!' : 'دووبارە هەوڵ بدە — ئێ دەکریات!'}</div>
+        <div class="tp-result-xp">+${xp} XP</div>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+          <button class="btn btn-primary" onclick="TypingPracticeModule.open()">جارێکی تر</button>
+          <button class="btn btn-outline-secondary" onclick="TypingPracticeModule.close()">داخستن</button>
+        </div>
+      </div>`;
+  }
+};
+
+/* ═══════════════════════════════════════
+   NUMBER SPEED DRILL
+═══════════════════════════════════════ */
+const NumberDrillModule = {
+  _NUMS: [
+    {ar:'٠',v:0},{ar:'١',v:1},{ar:'٢',v:2},{ar:'٣',v:3},{ar:'٤',v:4},
+    {ar:'٥',v:5},{ar:'٦',v:6},{ar:'٧',v:7},{ar:'٨',v:8},{ar:'٩',v:9},
+    {ar:'١٠',v:10},{ar:'١١',v:11},{ar:'١٢',v:12},{ar:'١٣',v:13},
+    {ar:'١٥',v:15},{ar:'٢٠',v:20},{ar:'٢٥',v:25},{ar:'١٠٠',v:100}
+  ],
+  _q: [], _idx: 0, _score: 0, _total: 10,
+
+  open() {
+    this._q = [...this._NUMS].sort(() => Math.random() - 0.5).slice(0, this._total);
+    this._idx = 0; this._score = 0;
+    const ov = document.getElementById('numberDrillOverlay');
+    if (ov) { ov.classList.remove('d-none'); this._renderQ(); }
+  },
+
+  close() { const ov = document.getElementById('numberDrillOverlay'); if (ov) ov.classList.add('d-none'); },
+
+  _renderQ() {
+    const el = document.getElementById('ndContent');
+    if (!el) return;
+    const q = this._q[this._idx];
+    const wrongs = this._NUMS.filter(n => n.v !== q.v).sort(() => Math.random() - 0.5).slice(0, 3);
+    const opts = [{v: q.v}, ...wrongs].sort(() => Math.random() - 0.5);
+    el.innerHTML = `
+      <div class="nd-header">
+        <span class="nd-badge"><i class="bi bi-123 me-1"></i>دڕیلی ژمارەکان</span>
+        <span class="nd-counter">${this._idx+1}/${this._total}</span>
+      </div>
+      <div class="nd-progress-bar"><div class="nd-progress-inner" style="width:${this._idx/this._total*100}%"></div></div>
+      <div class="nd-num-display">${q.ar}</div>
+      <p class="nd-question">ئەم ژمارەی عەرەبی چەندە؟</p>
+      <div class="nd-options">
+        ${opts.map(o => `<button class="nd-opt" onclick="NumberDrillModule.answer(${o.v}, this, ${q.v})">${o.v}</button>`).join('')}
+      </div>
+      <div class="nd-feedback d-none" id="ndFeedback"></div>`;
+  },
+
+  answer(sel, btn, correct) {
+    const ok = sel === correct;
+    if (ok) this._score++;
+    document.querySelectorAll('.nd-opt').forEach(b => {
+      b.disabled = true;
+      if (parseInt(b.textContent) === correct) b.classList.add('nd-correct');
+    });
+    if (!ok) btn.classList.add('nd-wrong');
+    SoundModule.play(ok ? 'correct' : 'wrong');
+    const fb = document.getElementById('ndFeedback');
+    if (fb) {
+      fb.className = `nd-feedback ${ok ? 'nd-fb-ok' : 'nd-fb-no'}`;
+      fb.textContent = ok ? `✔ ئافەرین! ${this._q[this._idx].ar} = ${correct}` : `✘ وەڵامی دروست: ${correct}`;
+    }
+    setTimeout(() => { this._idx++; if (this._idx < this._total) this._renderQ(); else this._finish(); }, ok ? 900 : 1600);
+  },
+
+  _finish() {
+    const xp = this._score * 4;
+    App.addXP(xp);
+    const el = document.getElementById('ndContent');
+    if (!el) return;
+    const pct = Math.round(this._score / this._total * 100);
+    el.innerHTML = `
+      <div class="nd-result">
+        <div style="font-size:3rem">${pct >= 80 ? '🏆' : '⭐'}</div>
+        <div style="font-size:2.5rem;font-weight:800;margin:.25rem 0">${this._score}/${this._total}</div>
+        <div style="color:var(--muted-text);font-size:.9rem;margin-bottom:.5rem">${pct >= 80 ? 'ژمارەکانی عەرەبی خۆتبووە!' : 'بەردەوام بە!'}</div>
+        <div class="nd-result-xp">+${xp} XP</div>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+          <button class="btn btn-primary" onclick="NumberDrillModule.open()">جارێکی تر</button>
+          <button class="btn btn-outline-secondary" onclick="NumberDrillModule.close()">داخستن</button>
+        </div>
+      </div>`;
   }
 };
 
